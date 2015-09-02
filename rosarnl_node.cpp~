@@ -475,7 +475,7 @@ void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
   veltime = ros::Time::now();//declare
   //ROS_INFO( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime.toSec() );
   double transRatio = msg->linear.x*1e3;
-  double rotRatio = msg->angular.z*180/M_PI*1e3;
+  double rotRatio = msg->angular.z*180/M_PI;
   double throttleRatio = 20;
   double lateralRatio = msg->linear.y*1e3;
   arnl.robot->lock();

@@ -3,7 +3,6 @@
 
 class ArRobot;
 class ArPathPlanningTask;
-class ArServerModeRatioDrive;
 class ArLocalizationTask;
 class ArServerModeStop;
 class ArServerModeGoto;
@@ -31,7 +30,6 @@ class ArnlSystem
 
     ArRobot *robot;
     ArPathPlanningTask *pathTask;
-    ArServerModeRatioDrive *modeRatioDrive;
     ArLocalizationTask *locTask;
     ArServerModeStop *modeStop;
     ArServerModeGoto *modeGoto;

@@ -182,10 +182,10 @@ ArnlSystem::Error ArnlSystem::setup()
 
 
   ArActionSlowDownWhenNotCertain *actionSlowDown = new ArActionSlowDownWhenNotCertain(locTask);
-  pathTask->getPathPlanActionGroup()->addAction(actionSlowDown, 40);
+  pathTask->getPathPlanActionGroup()->addAction(actionSlowDown, 140);
 
   ArActionLost *actionLostPath = new ArActionLost(locTask, pathTask);
-  pathTask->getPathPlanActionGroup()->addAction(actionLostPath, 50);
+  pathTask->getPathPlanActionGroup()->addAction(actionLostPath, 150);
 
   ArGlobalReplanningRangeDevice *replanDev = new ArGlobalReplanningRangeDevice(pathTask);
 
