@@ -22,6 +22,8 @@ ArnlSystem::ArnlSystem(const char *_logprefix) :
     modeRatioDrive(0),
     locTask(0),
     modeStop(0),
+    modeGoto(0),
+    modeWander(0),
     logprefix(_logprefix)
 {
 }
@@ -40,6 +42,8 @@ ArnlSystem::~ArnlSystem()
   if(modeRatioDrive) delete modeRatioDrive;
   if(locTask) delete locTask;
   if(modeStop) delete modeStop;
+  if(modeGoto) delete modeGoto;
+  if(modeWander) delete modeWander;
   if(robot) delete robot;
 }
 
@@ -131,6 +135,7 @@ ArnlSystem::Error ArnlSystem::setup()
   pathTask = new ArPathPlanningTask (robot, sonarDev, map);
 
   locTask = new ArLocalizationTask (robot, firstLaser, map);
+  creationTime.setToNow();
   
 
   std::map<int, ArLaser *>::iterator laserIt;
@@ -190,7 +195,7 @@ ArnlSystem::Error ArnlSystem::setup()
   ArGlobalReplanningRangeDevice *replanDev = new ArGlobalReplanningRangeDevice(pathTask);
 
   
-  ArServerInfoDrawings *drawings = new ArServerInfoDrawings(serverBase);
+  drawings = new ArServerInfoDrawings(serverBase);
   drawings->addRobotsRangeDevices(robot);
   drawings->addRangeDevice(replanDev);
 
@@ -259,6 +264,12 @@ ArnlSystem::Error ArnlSystem::setup()
   modeRatioDrive->addToConfig(Aria::getConfig(), "Teleop settings");
   modeRatioDrive->addControlCommands(commands);
 
+//Wander Mode//
+  modeWander = new ArServerModeWander(serverBase, robot);
+  ArActionLost *actionLostWander = new ArActionLost(locTask,pathTask,modeWander);
+  modeWander->getActionGroup()->addAction(actionLostWander, 110);
+//Wander Mode//
+
   // Tool to log data periodically to a file
   //ArDataLogger dataLogger(&robot, "datalog.txt");
   //dataLogger.addToConfig(Aria::getConfig()); // make it configurable through ArConfig
@@ -294,7 +305,7 @@ ArnlSystem::Error ArnlSystem::setup()
   
 
 
-  ArServerModeDock *modeDock = NULL;
+  modeDock = NULL;
   modeDock = ArServerModeDock::createDock(serverBase, robot, locTask, pathTask);
   if (modeDock != NULL)
   {

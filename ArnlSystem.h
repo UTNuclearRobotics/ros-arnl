@@ -1,12 +1,16 @@
 #ifndef _ARNLSYSTEM_H
 #define _ARNLSYSTEM_H
 
+#include "ariaUtil.h"
+
 class ArRobot;
 class ArPathPlanningTask;
 class ArServerModeRatioDrive;
 class ArLocalizationTask;
 class ArServerModeStop;
 class ArServerModeGoto;
+class ArServerModeWander; //
+class ArServerModeDock; //
 class ArRobotPacket;
 class ArServerBase;
 class ArMap;
@@ -35,8 +39,12 @@ class ArnlSystem
     ArLocalizationTask *locTask;
     ArServerModeStop *modeStop;
     ArServerModeGoto *modeGoto;
+    ArServerModeWander *modeWander; //
+    ArServerModeDock *modeDock; //
     ArServerBase *serverBase;
     ArMap *map;
+    ArTime creationTime;
+    ArServerInfoDrawings *drawings;
 
     const char* getServerMode() const ;
     const char* getServerStatus() const ;

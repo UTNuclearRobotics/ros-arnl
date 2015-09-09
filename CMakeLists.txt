@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation roscpp nav_msgs geome
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE RelWithDebInfo)
 
 #set the default path for built executables to the "bin" directory
 #set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -30,27 +30,34 @@ find_package(catkin REQUIRED COMPONENTS message_generation roscpp nav_msgs geome
 #  # TODO: List your msg files here
 #)
 
-add_action_files(
-  DIRECTORY action
-  FILES Arnl.action
-)
-
 #generate_dynamic_reconfigure_options(cfg/....cfg)
 
 #common commands for building c++ executables and libraries
 #add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
 
+catkin_package(
+    DEPENDS roscpp nav_msgs geometry_msgs tf
+)
+
 find_package(Boost REQUIRED COMPONENTS thread)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} )
 
 IF(DEFINED ENV{ARNL})
-  message("Warning: Using ARNL environment variable as location of ARNL include and lib directories: $ENV{ARNL}")
-  include_directories( $ENV{ARNL}/include $ENV{ARNL}/include/Aria $ENV{ARNL}/include/ArNetworking)
-  link_directories($ENV{ARNL}/lib)
+  message(WARNING "Warning: Using ARNL environment variable as location of ARNL include and lib directories: $ENV{ARNL}")
+  if(EXISTS $ENV{ARNL}/include/Arnl.h)
+    include_directories( $ENV{ARNL}/include $ENV{ARNL}/include/Aria $ENV{ARNL}/include/ArNetworking)
+    link_directories($ENV{ARNL}/lib)
+  else()
+    message(FATAL_ERROR "$ENV{ARNL}/include/Arnl.h file not found. Check value of ARNL environment variable or unset to use default installation directory.")
+  endif()
 ELSE()
-  include_directories( /usr/local/Arnl/include /usr/local/Arnl/include/Aria /usr/local/Arnl/include/ArNetworking)
-  link_directories(/usr/local/Arnl/lib)
+  if(EXISTS /usr/local/Arnl/include/Arnl.h)
+    include_directories( /usr/local/Arnl/include /usr/local/Arnl/include/Aria /usr/local/Arnl/include/ArNetworking)
+    link_directories(/usr/local/Arnl/lib)
+  else()
+    message(FATAL_ERROR "/usr/local/Arnl/include/Arnl.h file not found. ros-arnl requires the Adept MobileRobots ARNL and BaseArnl libraries to be installed. Set ARNL environment variable to use from non standard intallation directory.")
+  endif()
 ENDIF()
 
 add_executable(rosarnl_node rosarnl_node.cpp ArnlSystem.cpp RobotMonitor.cpp)
@@ -61,17 +68,10 @@ target_link_libraries(rosarnl_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} Arnl B
 set_target_properties(rosarnl_node PROPERTIES COMPILE_FLAGS "-fPIC -D_REENTRANT -Wall")
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES actionlib_msgs geometry_msgs std_msgs
-)
+#generate_messages(
+#  DEPENDENCIES actionlib_msgs geometry_msgs std_msgs
+#)
 
-# TODO: fill in what other packages will need to use this package
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-    DEPENDS roscpp nav_msgs geometry_msgs tf
-)
 
 #############
 ## Install ##
