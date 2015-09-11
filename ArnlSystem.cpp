@@ -99,6 +99,8 @@ ArnlSystem::Error ArnlSystem::setup()
   ArSonarDevice *sonarDev = new ArSonarDevice;
   robot->addRangeDevice(sonarDev);
 
+  robot->setCycleWarningTime(1000); // MPitsch - Default:250 Getting spammed by all the warning msgs b/c of slow computer
+
   ArRobotConfig *robotConfig = new ArRobotConfig(robot);
 
   robotConfig->addAnalogGyro(gyro);
