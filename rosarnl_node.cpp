@@ -110,6 +110,10 @@ class RosArnlNode
     ros::Subscriber goalname_sub;
     void goalname_sub_cb(const std_msgs::StringConstPtr &msg);
 
+    // request rosarnl to shutdown
+    ros::Subscriber shutdown_sub;
+    void shutdown_rosarnl_cb(const std_msgs::BoolConstPtr &msg);
+
     ros::Publisher current_goal_pub;
     void arnl_new_goal_cb(ArPose p);
 
@@ -119,6 +123,7 @@ class RosArnlNode
     void execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr& goal);
     bool arnl_goal_done;
     bool action_executing;
+    bool rosarnl_inventory_running;
     void arnl_goal_reached_cb(ArPose p);
     void arnl_goal_failed_cb(ArPose p);
     void arnl_goal_interrupted_cb(ArPose p);
@@ -140,10 +145,11 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   myPublishCB(this, &RosArnlNode::publish),
   actionServer(nh, "move_base", boost::bind(&RosArnlNode::execute_action_cb, this, _1), false),
   arnl_goal_done(false),
-  action_executing(false)
+  action_executing(false),
+  rosarnl_inventory_running(true)
 {
   n = nh;
-
+  
   // Figure out what frame_id's to use. if a tf_prefix param is specified,
   // it will be added to the beginning of the frame_ids.
   //
@@ -192,6 +198,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   simple_goal_sub = n.subscribe("move_base_simple/goal", 1, (boost::function <void(const geometry_msgs::PoseStampedConstPtr&)>) boost::bind(&RosArnlNode::simple_goal_sub_cb, this, _1));
   cmd_drive_sub = n.subscribe("cmd_vel", 1, (boost::function <void(const geometry_msgs::TwistConstPtr&)>) boost::bind(&RosArnlNode::cmdvel_cb, this, _1));
   goalname_sub = n.subscribe("goalname", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::goalname_sub_cb, this, _1));
+  shutdown_sub = n.subscribe("inventory_status", 1, (boost::function <void(const std_msgs::BoolConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
 
   current_goal_pub = n.advertise<geometry_msgs::Pose>("current_goal", 1, true);
   arnl.pathTask->addNewGoalCB(new ArFunctor1C<RosArnlNode, ArPose>(this, &RosArnlNode::arnl_new_goal_cb));
@@ -221,7 +228,10 @@ int RosArnlNode::Setup()
 void RosArnlNode::spin()
 {
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Running ROS node...");
-  ros::spin();
+  while (rosarnl_inventory_running)
+  {
+    ros::spinOnce();
+  }
 }
 
 void RosArnlNode::publish()
@@ -600,6 +610,15 @@ void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
   //ROS_DEBUG("rosarnl_node: sent vels to to aria (time %f): x vel %f mm/s, y vel %f mm/s, ang vel %f deg/s", veltime.toSec(),
     //(double) msg->linear.x * 1e3, (double) msg->linear.y * 1.3, (double) msg->angular.z * 180/M_PI);
 }
+
+void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::BoolConstPtr &msg)
+{
+  if (msg->data)
+  {
+    rosarnl_inventory_running = false;
+  }
+}
+
 
 
 void ariaLogHandler(const char *msg, ArLog::LogLevel level)
