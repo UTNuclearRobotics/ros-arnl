@@ -74,6 +74,8 @@ class RosArnlNode
     std_msgs::Float64 params_msg;
     ros::Publisher params_pub;
 
+    
+
     geometry_msgs::TransformStamped map_trans;
     tf::TransformBroadcaster map_broadcaster;
 
@@ -190,7 +192,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
 
   arnl_server_mode_pub = n.advertise<std_msgs::String>("arnl_server_mode", -1);
   arnl_server_status_pub = n.advertise<std_msgs::String>("arnl_server_status", -1);
-
+  
   arnl_path_state_pub = n.advertise<std_msgs::String>("arnl_path_state", -1);
 
   // TODO the move_base and move_bas_simple topics should be in separate node
@@ -217,6 +219,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
 
 RosArnlNode::~RosArnlNode()
 {
+  Aria::exit(0);
 }
 
 int RosArnlNode::Setup()
@@ -232,7 +235,10 @@ void RosArnlNode::spin()
   {
     ros::spinOnce();
   }
+  ROS_INFO("Shutdown request for rosarnl_node");
 }
+
+
 
 void RosArnlNode::publish()
 {
@@ -621,6 +627,8 @@ void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::BoolConstPtr &msg)
 
 
 
+
+
 void ariaLogHandler(const char *msg, ArLog::LogLevel level)
 {
   // node that ARIA logging is normally limited at Normal and Terse only. Set
@@ -638,6 +646,11 @@ void ariaLogHandler(const char *msg, ArLog::LogLevel level)
       return;
   }
 }
+
+
+
+
+
 
 int main( int argc, char** argv )
 {
@@ -678,11 +691,13 @@ int main( int argc, char** argv )
   }
 
   node->spin();
-
+  
   delete node;
+  
+  
 
-  ROS_INFO_NAMED("rosarnl_node",  "rosarnl_node: Quitting... \n" );
-  Aria::exit(0);
+  
+
   return 0;
 
 }
