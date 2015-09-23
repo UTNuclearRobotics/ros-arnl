@@ -7,6 +7,7 @@
 #include "ArDocking.h"
 
 #include "ArnlSystem.h"
+#include "LaserPublisher.h"
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
@@ -362,8 +363,9 @@ void RosArnlNode::publish()
   }
 
   const char *s = arnl.getServerStatus();
-  if(s && lastServerStatus != s)
+  if(s != NULL && lastServerStatus != s)
   {
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing new server status: %s", s);
     lastServerStatus = s;
     std_msgs::String msg;
     msg.data = lastServerStatus;
@@ -371,8 +373,9 @@ void RosArnlNode::publish()
   }
 
   const char *m = arnl.getServerMode();
-  if(m && lastServerMode != m)
+  if(m != NULL && lastServerMode != m)
   {
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing now server mode: %s", m);
     lastServerMode = m;
     std_msgs::String msg;
     msg.data = lastServerMode;
@@ -689,6 +692,16 @@ int main( int argc, char** argv )
     ROS_FATAL_NAMED("rosarnl_node", "rosarnl_node: ROS node setup failed... \n" );
     return -1;
   }
+
+  arnl.robot->lock();
+  const std::map<int, ArLaser*> *lasers = arnl.robot->getLaserMap();
+  for(std::map<int, ArLaser*>::const_iterator i = lasers->begin(); i != lasers->end(); ++i)
+  {
+    ArLaser *l = i->second;
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Creating publisher for laser %s\n", l->getName());
+    new LaserPublisher(l, n);
+  }
+  arnl.robot->unlock();
 
   node->spin();
   
