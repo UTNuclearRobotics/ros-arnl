@@ -24,6 +24,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <actionlib/server/simple_action_server.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -75,6 +76,8 @@ class RosArnlNode
     std_msgs::Float64 params_msg;
     ros::Publisher params_pub;
 
+    ros::Publisher battery_charge_percent_pub;
+    ros::Publisher battery_charge_state_pub;
     
 
     geometry_msgs::TransformStamped map_trans;
@@ -195,6 +198,9 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   arnl_server_status_pub = n.advertise<std_msgs::String>("arnl_server_status", -1);
   
   arnl_path_state_pub = n.advertise<std_msgs::String>("arnl_path_state", -1);
+  
+  battery_charge_percent_pub = n.advertise<std_msgs::Float32>("battery_state_of_charge", -1);
+  battery_charge_state_pub = n.advertise<std_msgs::Int8>("battery_charging_state", -1);
 
   // TODO the move_base and move_bas_simple topics should be in separate node
   // handles?
@@ -330,6 +336,14 @@ void RosArnlNode::publish()
   params_msg.data = robot_length;
   params_pub.publish(params_msg);
   
+  //Battery info publishing
+  std_msgs::Float32 battery_percent_msg;
+  battery_percent_msg.data = arnl.robot->getStateOfCharge();
+  battery_charge_percent_pub.publish(battery_percent_msg);
+  
+  std_msgs::Int8 battery_charging_state_msg;
+  battery_charging_state_msg.data = arnl.robot->getChargeState();
+  battery_charge_state_pub.publish(battery_charging_state_msg);
 
   if(action_executing) 
   {
