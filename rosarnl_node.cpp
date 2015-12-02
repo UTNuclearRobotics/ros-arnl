@@ -24,6 +24,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Float32.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <actionlib/server/simple_action_server.h>
