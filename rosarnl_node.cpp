@@ -134,6 +134,8 @@ class RosArnlNode
     void arnl_goal_reached_cb(ArPose p);
     void arnl_goal_failed_cb(ArPose p);
     void arnl_goal_interrupted_cb(ArPose p);
+    move_base_msgs::MoveBaseActionFeedback move_action_feedback_;
+    move_base_msgs::MoveBaseActionResult move_action_result_;
     
     // If robot has e--top button pressed, print a warning and return true. Otherwise return false.
     bool check_estop(const char *s) {
@@ -542,7 +544,8 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   //arnl.pathTask->pathPlanToPose(goalpose, heading);
   arnl.modeGoto->gotoPose(goalpose, heading);
   arnl_goal_done = false;
-  while(n.ok())
+  
+  while(n.ok() && actionServer.isActive())
   {
     // TODO check for localization lost
 
@@ -596,8 +599,9 @@ void RosArnlNode::arnl_goal_reached_cb(ArPose p)
     ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: goal succeeded");
     actionServer.setSucceeded(move_base_msgs::MoveBaseResult(), "Goal succeeded");
   }
-else
-  puts("action not executing");
+  else {
+    puts("action not executing");
+  }
   arnl_goal_done = true;
 }
 
@@ -720,14 +724,8 @@ int main( int argc, char** argv )
 
   node->spin();
   
-  delete node;
-  
-
-
-  
+  delete node;  
 
   return 0;
 
 }
-
-
