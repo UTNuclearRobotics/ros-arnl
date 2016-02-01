@@ -30,7 +30,6 @@
 #include <actionlib/server/simple_action_server.h>
 #include <move_base_msgs/MoveBaseAction.h>
 
-
 class RosArnlNode
 {
   public:
@@ -58,16 +57,21 @@ class RosArnlNode
     ros::ServiceServer wander_srv;
     ros::ServiceServer stop_srv;
     ros::ServiceServer dock_srv;
+    ros::ServiceServer undock_srv;
 
     bool enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool disable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool dock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
     ros::Publisher motors_state_pub;
+    ros::Publisher dock_state_pub;
     std_msgs::Bool motors_state;
+    std_msgs::String dock_state;
     bool published_motors_state;
+    bool published_dock_state;
 
     ros::Time veltime;
 
@@ -79,7 +83,6 @@ class RosArnlNode
 
     ros::Publisher battery_charge_percent_pub;
     ros::Publisher battery_charge_state_pub;
-    
 
     geometry_msgs::TransformStamped map_trans;
     tf::TransformBroadcaster map_broadcaster;
@@ -180,6 +183,10 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true /*latch*/ );
   motors_state.data = false;
   published_motors_state = false;
+  
+  dock_state_pub = n.advertise<std_msgs::String>("dock_state", 1, true);
+  dock_state.data = "";
+  published_dock_state = false;
 
   pose_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 5, true /*latch*/);
 
@@ -190,6 +197,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   wander_srv = n.advertiseService("wander", &RosArnlNode::wander_cb, this);
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
+  undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
 
   veltime = ros::Time::now();
 
@@ -378,6 +386,16 @@ void RosArnlNode::publish()
     motors_state_pub.publish(motors_state);
     published_motors_state = true;
   }
+  
+  // publish dock state if changed
+  std::string state(arnl.modeDock->toString(arnl.modeDock->getState()));
+  if(state != dock_state.data)
+  {
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing new dock state: %s.", e?"yes":"no");
+    dock_state.data = state;
+    dock_state_pub.publish(dock_state);
+    published_dock_state = true;
+  }
 
   const char *s = arnl.getServerStatus();
   if(s != NULL && lastServerStatus != s)
@@ -443,9 +461,20 @@ bool RosArnlNode::stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Re
 bool RosArnlNode::dock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Docking procedure request.");
-    if(check_estop("dock"))
+    if(check_estop("dock")) {
       return false;
+    }
     arnl.modeDock->dock();
+    return true;
+}
+
+bool RosArnlNode::undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Undocking procedure request.");
+    if(check_estop("undock")) {
+      return false;
+    }
+    arnl.modeDock->undock();
     return true;
 }
 
