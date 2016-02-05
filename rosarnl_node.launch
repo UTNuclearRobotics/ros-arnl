@@ -1,0 +1,13 @@
+<launch>
+
+<node
+    name = "rosarnl_node"
+    pkg	 = "rosarnl" 
+    type = "rosarnl_node"
+    args = ""
+  
+    output = "screen"
+  />
+
+
+</launch>
