@@ -122,7 +122,7 @@ class RosArnlNode
 
     // request rosarnl to shutdown
     ros::Subscriber shutdown_sub;
-    void shutdown_rosarnl_cb(const std_msgs::BoolConstPtr &msg);
+    void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
 
     ros::Publisher current_goal_pub;
     void arnl_new_goal_cb(ArPose p);
@@ -218,7 +218,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   simple_goal_sub = n.subscribe("move_base_simple/goal", 1, (boost::function <void(const geometry_msgs::PoseStampedConstPtr&)>) boost::bind(&RosArnlNode::simple_goal_sub_cb, this, _1));
   cmd_drive_sub = n.subscribe("cmd_vel", 1, (boost::function <void(const geometry_msgs::TwistConstPtr&)>) boost::bind(&RosArnlNode::cmdvel_cb, this, _1));
   goalname_sub = n.subscribe("goalname", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::goalname_sub_cb, this, _1));
-  shutdown_sub = n.subscribe("inventory_status", 1, (boost::function <void(const std_msgs::BoolConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
+  shutdown_sub = n.subscribe("/shutdown", 1, (boost::function <void(const std_msgs::EmptyConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
 
   current_goal_pub = n.advertise<geometry_msgs::Pose>("current_goal", 1, true);
   arnl.pathTask->addNewGoalCB(new ArFunctor1C<RosArnlNode, ArPose>(this, &RosArnlNode::arnl_new_goal_cb));
@@ -668,12 +668,9 @@ void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
     //(double) msg->linear.x * 1e3, (double) msg->linear.y * 1.3, (double) msg->angular.z * 180/M_PI);
 }
 
-void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::BoolConstPtr &msg)
+void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr& msg)
 {
-  if (msg->data)
-  {
-    rosarnl_inventory_running = false;
-  }
+  rosarnl_inventory_running = false;
 }
 
 
