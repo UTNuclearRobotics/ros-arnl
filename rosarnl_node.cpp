@@ -25,6 +25,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <actionlib/server/simple_action_server.h>
@@ -101,6 +102,7 @@ class RosArnlNode
 
     ros::Publisher arnl_server_mode_pub;
     ros::Publisher arnl_server_status_pub;
+    ros::Publisher arnl_shutdown_confirm_pub;
 
     ros::Publisher arnl_path_state_pub;
     void arnl_path_state_change_cb();
@@ -207,6 +209,8 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
 
   arnl_server_mode_pub = n.advertise<std_msgs::String>("arnl_server_mode", -1);
   arnl_server_status_pub = n.advertise<std_msgs::String>("arnl_server_status", -1);
+
+  arnl_shutdown_confirm_pub = n.advertise<std_msgs::Empty>("arnl_shutdown_status", -1);
   
   arnl_path_state_pub = n.advertise<std_msgs::String>("arnl_path_state", -1);
   
@@ -428,7 +432,7 @@ bool RosArnlNode::enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::
     check_estop("enable motors");
     arnl.robot->enableMotors();
     arnl.robot->unlock();
-	// todo could wait and see if motors do become enabled, and send a response with an error flag if not
+  // todo could wait and see if motors do become enabled, and send a response with an error flag if not
     return true;
 }
 
@@ -438,7 +442,7 @@ bool RosArnlNode::disable_motors_cb(std_srvs::Empty::Request& request, std_srvs:
     arnl.robot->lock();
     arnl.robot->disableMotors();
     arnl.robot->unlock();
-	// todo could wait and see if motors do become disabled, and send a response with an error flag if not
+  // todo could wait and see if motors do become disabled, and send a response with an error flag if not
     return true;
 }
 
@@ -668,9 +672,11 @@ void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
     //(double) msg->linear.x * 1e3, (double) msg->linear.y * 1.3, (double) msg->angular.z * 180/M_PI);
 }
 
-void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr& msg)
+void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg)
 {
+  std_msgs::Empty confirm_msg;
   rosarnl_inventory_running = false;
+  arnl_shutdown_confirm_pub.publish(confirm_msg);
 }
 
 
