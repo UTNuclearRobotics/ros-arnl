@@ -76,7 +76,7 @@ class RosArnlNode
 
     ros::Time veltime;
 
-    geometry_msgs::PoseWithCovarianceStamped pose_msg;
+    geometry_msgs::PoseStamped pose_msg;
     ros::Publisher pose_pub;
 
     std_msgs::Float64 params_msg;
@@ -95,7 +95,7 @@ class RosArnlNode
     std::string frame_id_sonar;
 
     ros::Subscriber initialpose_sub;
-    void initialpose_sub_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
+    void initialpose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     
     ros::ServiceServer global_localization_srv;
     bool global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
@@ -179,8 +179,8 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   frame_id_bumper = tf::resolve(tf_prefix, "bumpers_frame");
   frame_id_sonar = tf::resolve(tf_prefix, "sonar_frame");
 
-  // initialize to all invalid
-  pose_msg.pose.covariance.assign(-1);
+  // initialize to all invalid if pose is with covariance
+  // pose_msg.pose.covariance.assign(-1);
 
   motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true /*latch*/ );
   motors_state.data = false;
@@ -190,7 +190,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   dock_state.data = "";
   published_dock_state = false;
 
-  pose_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 5, true /*latch*/);
+  pose_pub = n.advertise<geometry_msgs::PoseStamped>("amcl_pose", 5, true /*latch*/);
 
   params_pub = n.advertise<std_msgs::Float64>("params",1, true /*latch*/);
 
@@ -205,7 +205,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
 
   global_localization_srv = n.advertiseService("global_localization", &RosArnlNode::global_localization_srv_cb, this);
 
-  initialpose_sub = n.subscribe("initialpose", 1, (boost::function <void(const geometry_msgs::PoseWithCovarianceStampedConstPtr&)>) boost::bind(&RosArnlNode::initialpose_sub_cb, this, _1));
+  initialpose_sub = n.subscribe("initialpose", 1, (boost::function <void(const geometry_msgs::PoseStampedConstPtr&)>) boost::bind(&RosArnlNode::initialpose_sub_cb, this, _1));
 
   arnl_server_mode_pub = n.advertise<std_msgs::String>("arnl_server_mode", -1);
   arnl_server_status_pub = n.advertise<std_msgs::String>("arnl_server_status", -1);
@@ -277,7 +277,7 @@ void RosArnlNode::publish()
 
   // convert mm and degrees to position meters and quaternion angle in ros pose
   tf::poseTFToMsg(tf::Transform(tf::createQuaternionFromYaw(pos.getTh()*M_PI/180), tf::Vector3(pos.getX()/1000,
-    pos.getY()/1000, 0)), pose_msg.pose.pose); 
+    pos.getY()/1000, 0)), pose_msg.pose); 
 
   pose_msg.header.frame_id = "map";
 
@@ -329,15 +329,15 @@ void RosArnlNode::publish()
     // marker) in the RosArnlNode constructor, so just update elements that
     // contain x, y and yaw.
   
-    pose_msg.pose.covariance[6*0 + 0] = var(0,0)/1000.0;  // x/x
-    pose_msg.pose.covariance[6*0 + 1] = var(0,1)/1000.0;  // x/y
-    pose_msg.pose.covariance[6*0 + 5] = ArMath::degToRad(var(0,2)/1000.0);    //x/yaw
-    pose_msg.pose.covariance[6*1 + 0] = var(1,0)/1000.0;  //y/x
-    pose_msg.pose.covariance[6*1 + 1] = var(1,1)/1000.0;  // y/y
-    pose_msg.pose.covariance[6*1 + 5] = ArMath::degToRad(var(1,2)/1000.0);  // y/yaw
-    pose_msg.pose.covariance[6*5 + 0] = ArMath::degToRad(var(2,0)/1000.0);  //yaw/x
-    pose_msg.pose.covariance[6*5 + 1] = ArMath::degToRad(var(2,1)/1000.0);  // yaw*y
-    pose_msg.pose.covariance[6*5 + 5] = ArMath::degToRad(var(2,2)); // yaw*yaw
+    // pose_msg.pose.covariance[6*0 + 0] = var(0,0)/1000.0;  // x/x
+    // pose_msg.pose.covariance[6*0 + 1] = var(0,1)/1000.0;  // x/y
+    // pose_msg.pose.covariance[6*0 + 5] = ArMath::degToRad(var(0,2)/1000.0);    //x/yaw
+    // pose_msg.pose.covariance[6*1 + 0] = var(1,0)/1000.0;  //y/x
+    // pose_msg.pose.covariance[6*1 + 1] = var(1,1)/1000.0;  // y/y
+    // pose_msg.pose.covariance[6*1 + 5] = ArMath::degToRad(var(1,2)/1000.0);  // y/yaw
+    // pose_msg.pose.covariance[6*5 + 0] = ArMath::degToRad(var(2,0)/1000.0);  //yaw/x
+    // pose_msg.pose.covariance[6*5 + 1] = ArMath::degToRad(var(2,1)/1000.0);  // yaw*y
+    // pose_msg.pose.covariance[6*5 + 5] = ArMath::degToRad(var(2,2)); // yaw*yaw
   }
 #endif
   
@@ -363,7 +363,7 @@ void RosArnlNode::publish()
   if(action_executing) 
   {
     move_base_msgs::MoveBaseFeedback feedback;
-    feedback.base_position.pose = pose_msg.pose.pose;
+    feedback.base_position.pose = pose_msg.pose;
     actionServer.publishFeedback(feedback);
   }
 
@@ -528,9 +528,9 @@ ArPoseWithTime RosArnlNode::rosPoseStampedToArPoseWithTime(const geometry_msgs::
 }
 
 
-void RosArnlNode::initialpose_sub_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
+void RosArnlNode::initialpose_sub_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 {
-  ArPose p = rosPoseToArPose(msg->pose.pose);
+  ArPose p = rosPoseToArPose(msg->pose);
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Init localization pose received %.0fmm, %.0fmm, %.0fdeg", p.getX(), p.getY(), p.getTh());
   arnl.locTask->forceUpdatePose(p);
 }
