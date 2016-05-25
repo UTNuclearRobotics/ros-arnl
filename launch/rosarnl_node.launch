@@ -1,0 +1,17 @@
+<launch>
+
+<node
+    name = "rosarnl_node"
+    pkg	 = "rosarnl" 
+    type = "rosarnl_node"
+    args = ""
+  
+    
+    output = "screen"
+  />
+
+<rosparam command="load" file="$(find rosarnl)/rosparam/robot_params.yaml" />
+<!-- <param name="robot_length" type="double" value="696.0" /> -->
+
+
+</launch>
