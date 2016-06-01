@@ -437,7 +437,17 @@ bool RosArnlNode::enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::
     check_estop("enable motors");
     arnl.robot->enableMotors();
     arnl.robot->unlock();
-  // todo could wait and see if motors do become enabled, and send a response with an error flag if not
+    
+    // Wait to see if it was successful.
+    ros::Time wait_start_time = ros::Time::now();
+    ros::Duration timeout_duration(1.0);
+    while (!arnl.robot->areMotorsEnabled()) {
+      // Check for timeout
+      if (ros::Time::now() - wait_start_time > timeout_duration) {
+	return false;
+      }
+    }
+    
     return true;
 }
 
@@ -447,7 +457,17 @@ bool RosArnlNode::disable_motors_cb(std_srvs::Empty::Request& request, std_srvs:
     arnl.robot->lock();
     arnl.robot->disableMotors();
     arnl.robot->unlock();
-  // todo could wait and see if motors do become disabled, and send a response with an error flag if not
+    
+    // Wait to see if it was successful.
+    ros::Time wait_start_time = ros::Time::now();
+    ros::Duration timeout_duration(1.0);
+    while (arnl.robot->areMotorsEnabled()) {
+      // Check for timeout
+      if (ros::Time::now() - wait_start_time > timeout_duration) {
+	return false;
+      }
+    }
+    
     return true;
 }
 
