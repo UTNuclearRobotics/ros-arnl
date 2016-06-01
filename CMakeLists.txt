@@ -25,10 +25,10 @@ set(ROS_BUILD_TYPE RelWithDebInfo)
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 #uncomment if you have defined messages
-#add_message_files(
-#  FILES
-#  ...
-#)
+add_message_files(
+  FILES
+  BatteryStatus.msg
+)
 
 #uncomment if you have defined services
 #add_service_files(
@@ -36,14 +36,14 @@ set(ROS_BUILD_TYPE RelWithDebInfo)
 #  # TODO: List your msg files here
 #)
 
-#generate_dynamic_reconfigure_options(cfg/....cfg)
-
-#common commands for building c++ executables and libraries
-#add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 catkin_package(
-    DEPENDS roscpp nav_msgs geometry_msgs tf
+    CATKIN_DEPENDS message_generation roscpp nav_msgs geometry_msgs tf actionlib actionlib_msgs
 )
 
 find_package(Boost REQUIRED COMPONENTS thread)
@@ -67,7 +67,7 @@ ELSE()
 ENDIF()
 
 add_executable(rosarnl_node rosarnl_node.cpp ArnlSystem.cpp RobotMonitor.cpp LaserPublisher.cpp)
-#add_dependencies(rosarnl_node rosarnl_gencfg)
+add_dependencies(rosarnl_node ${PROJECT_NAME}_generate_messages_cpp})
 #add_dependencies(rosarnl_node rosarnl_gencpp)
 
 target_link_libraries(rosarnl_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} Arnl BaseArnl ArNetworkingForArnl AriaForArnl pthread dl rt)
