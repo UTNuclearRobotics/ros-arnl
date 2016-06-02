@@ -61,9 +61,24 @@ protected:
 
   ArFunctorC<RosArnlNode> myPublishCB;
 
+  /**
+   * @breif Convert ROS pose message to Aria ArPose type
+   */
   ArPose rosPoseToArPose(const geometry_msgs::Pose& p);
+  
+  /**
+   * @breif Convert ROS PoseStamped message to Aria ArPose type
+   */
   ArPose rosPoseToArPose(const geometry_msgs::PoseStamped& p) { return rosPoseToArPose(p.pose); }
-  ArPoseWithTime rosPoseStampedToArPoseWithTime(const geometry_msgs::PoseStamped& p); 
+  
+  /**
+   * @breif Convert ROS PoseStamped message to Aria ARPoseWithTime type
+   */
+  ArPoseWithTime rosPoseStampedToArPoseWithTime(const geometry_msgs::PoseStamped& p);
+  
+  /**
+   * @breif Convert Aria ArPose type to ROS pose message
+   */
   geometry_msgs::Pose rosPoseToArPose(const ArPose& arpose);
 
   ros::ServiceServer enable_srv;
@@ -73,14 +88,58 @@ protected:
   ros::ServiceServer stop_srv;
   ros::ServiceServer dock_srv;
   ros::ServiceServer undock_srv;
+  ros::ServiceServer global_localization_srv;
 
+  /**
+   * @breif Enable drive motors. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false on failure.
+   */
   bool enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Disable drive motors. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false on failure.
+   */
   bool disable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
   bool get_robot_params_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Activate wander mode. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false if e-stop is active.
+   */
   bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Stop the platform. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return Always true.
+   */
   bool stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Go to dock. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false on failure.
+   */
   bool dock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Undock. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false on failure.
+   */
   bool undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Perform global localization. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false on failure.
+   */
+  bool global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
   ros::Publisher motors_state_pub;
   ros::Publisher dock_state_pub;
@@ -88,8 +147,6 @@ protected:
   std_msgs::String dock_state;
   bool published_motors_state;
   bool published_dock_state;
-
-  ros::Time veltime;
 
   geometry_msgs::PoseStamped pose_msg;
   ros::Publisher pose_pub;
@@ -113,9 +170,6 @@ protected:
 
   ros::Subscriber initialpose_sub;
   void initialpose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
-  
-  ros::ServiceServer global_localization_srv;
-  bool global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
   ros::Publisher arnl_server_mode_pub;
   ros::Publisher arnl_server_status_pub;
@@ -156,8 +210,6 @@ protected:
   void arnl_goal_reached_cb(ArPose p);
   void arnl_goal_failed_cb(ArPose p);
   void arnl_goal_interrupted_cb(ArPose p);
-  move_base_msgs::MoveBaseActionFeedback move_action_feedback_;
-  move_base_msgs::MoveBaseActionResult move_action_result_;
   
   // If robot has e--top button pressed, print a warning and return true. Otherwise return false.
   bool check_estop(const char *s);
@@ -191,8 +243,6 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   double robot_length = arnl.robot->getRobotLength();
   ros::param::set("/rosarnl_node/robot_length", robot_length);
 
-
-  
   // initialize to all invalid if pose is with covariance
   // pose_msg.pose.covariance.assign(-1);
 
@@ -215,8 +265,6 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
   undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
-
-  veltime = ros::Time::now();
 
   global_localization_srv = n.advertiseService("global_localization", &RosArnlNode::global_localization_srv_cb, this);
 
@@ -516,8 +564,11 @@ bool RosArnlNode::global_localization_srv_cb(std_srvs::Empty::Request& request, 
 {
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Localize init (global_localization service) request...");
 //  arnl.locTask->localizeRobotInMapInit();
-  if(! arnl.locTask->localizeRobotAtHomeBlocking() )
+  if(!arnl.locTask->localizeRobotAtHomeBlocking()) {
     ROS_WARN_NAMED("rosarnl_node", "rosarnl_node: Error in initial localization.");
+    return false;
+  }
+  
   return true;
 }
 
@@ -689,8 +740,6 @@ void RosArnlNode::arnl_goal_interrupted_cb(ArPose p)
 
 void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 {
-  veltime = ros::Time::now();//declare
-  //ROS_INFO( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime.toSec() );
   double transRatio = msg->linear.x*1e3;
   double rotRatio = msg->angular.z*180/M_PI*1e3;
   double throttleRatio = 20;
@@ -698,8 +747,6 @@ void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
   arnl.robot->lock();
   arnl.modeRatioDrive->ratioDrive(transRatio, rotRatio, throttleRatio, true, lateralRatio);
   arnl.robot->unlock();
-  //ROS_DEBUG("rosarnl_node: sent vels to to aria (time %f): x vel %f mm/s, y vel %f mm/s, ang vel %f deg/s", veltime.toSec(),
-    //(double) msg->linear.x * 1e3, (double) msg->linear.y * 1.3, (double) msg->angular.z * 180/M_PI);
 }
 
 void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg)
