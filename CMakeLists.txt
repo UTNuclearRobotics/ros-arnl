@@ -43,7 +43,8 @@ generate_messages(
 )
 
 catkin_package(
-    CATKIN_DEPENDS message_generation roscpp nav_msgs geometry_msgs tf actionlib actionlib_msgs
+  INCLUDE_DIRS
+  CATKIN_DEPENDS message_generation roscpp nav_msgs geometry_msgs tf actionlib actionlib_msgs
 )
 
 find_package(Boost REQUIRED COMPONENTS thread)
@@ -67,17 +68,11 @@ ELSE()
 ENDIF()
 
 add_executable(rosarnl_node rosarnl_node.cpp ArnlSystem.cpp RobotMonitor.cpp LaserPublisher.cpp)
-add_dependencies(rosarnl_node ${PROJECT_NAME}_generate_messages_cpp})
+add_dependencies(rosarnl_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp})
 #add_dependencies(rosarnl_node rosarnl_gencpp)
 
 target_link_libraries(rosarnl_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} Arnl BaseArnl ArNetworkingForArnl AriaForArnl pthread dl rt)
 set_target_properties(rosarnl_node PROPERTIES COMPILE_FLAGS "-fPIC -D_REENTRANT -Wall")
-
-## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#  DEPENDENCIES actionlib_msgs geometry_msgs std_msgs
-#)
-
 
 #############
 ## Install ##
