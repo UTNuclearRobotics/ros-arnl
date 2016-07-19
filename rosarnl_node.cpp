@@ -738,7 +738,7 @@ void RosArnlNode::arnl_goal_interrupted_cb(ArPose p)
   }
 }
 
-void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
+/*void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 {
   double transRatio = msg->linear.x*1e3;
   double rotRatio = msg->angular.z*180/M_PI*1e3;
@@ -747,7 +747,23 @@ void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
   arnl.robot->lock();
   arnl.modeRatioDrive->ratioDrive(transRatio, rotRatio, throttleRatio, true, lateralRatio);
   arnl.robot->unlock();
+}*/
+
+void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
+{
+  ros::Time veltime = ros::Time::now();
+  ROS_INFO( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime.toSec() );
+  
+  arnl.robot->lock();
+  arnl.robot->setVel(msg->linear.x*1e3);
+  if(arnl.robot->hasLatVel())
+    arnl.robot->setLatVel(msg->linear.y*1e3);
+  arnl.robot->setRotVel(msg->angular.z*180/M_PI);
+  arnl.robot->unlock();
+  ROS_DEBUG("RosArnl: sent vels to Arnl (time %f): x vel %f mm/s, y vel %f mm/s, ang vel %f deg/s", veltime.toSec(), 
+    (double) msg->linear.x * 1e3, (double) msg->linear.y * 1e3, (double) msg->angular.z * 180/M_PI);
 }
+
 
 void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg)
 {
