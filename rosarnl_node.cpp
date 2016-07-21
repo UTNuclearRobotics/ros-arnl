@@ -83,7 +83,6 @@ protected:
 
   ros::ServiceServer enable_srv;
   ros::ServiceServer disable_srv;
-  ros::ServiceServer robot_params_srv;
   ros::ServiceServer wander_srv;
   ros::ServiceServer stop_srv;
   ros::ServiceServer dock_srv;
@@ -103,9 +102,7 @@ protected:
    * @return True on success, false on failure.
    */
   bool disable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
-  bool get_robot_params_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
+    
   /**
    * @breif Activate wander mode. ROS service callback function.
    * @srv std_srvs::Empty
@@ -150,9 +147,6 @@ protected:
 
   geometry_msgs::PoseStamped pose_msg;
   ros::Publisher pose_pub;
-
-  std_msgs::Float64 params_msg;
-  ros::Publisher params_pub;
 
   // Battery publishing
   ros::Publisher battery_pub;
@@ -240,11 +234,6 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   frame_id_base_link = tf::resolve(tf_prefix, "base_link");
   frame_id_bumper = tf::resolve(tf_prefix, "bumpers_frame");
   frame_id_sonar = tf::resolve(tf_prefix, "sonar_frame");
-  double robot_length = arnl.robot->getRobotLength();
-  ros::param::set("/rosarnl_node/robot_length", robot_length);
-
-  // initialize to all invalid if pose is with covariance
-  // pose_msg.pose.covariance.assign(-1);
 
   motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true);
   motors_state.data = false;
@@ -256,11 +245,8 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
 
   pose_pub = n.advertise<geometry_msgs::PoseStamped>("amcl_pose", 5, true);
 
-  params_pub = n.advertise<std_msgs::Float64>("params",1, true);
-
   enable_srv = n.advertiseService("enable_motors", &RosArnlNode::enable_motors_cb, this);
   disable_srv = n.advertiseService("disable_motors", &RosArnlNode::disable_motors_cb, this);
-  robot_params_srv = n.advertiseService("get_robot_params", &RosArnlNode::get_robot_params_cb, this);
   wander_srv = n.advertiseService("wander", &RosArnlNode::wander_cb, this);
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
@@ -518,12 +504,6 @@ bool RosArnlNode::disable_motors_cb(std_srvs::Empty::Request& request, std_srvs:
     return true;
 }
 
-bool RosArnlNode::get_robot_params_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
-{
-  
-  //do something with this
-  return true;
-}
 bool RosArnlNode::wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Enable wander mode request.");

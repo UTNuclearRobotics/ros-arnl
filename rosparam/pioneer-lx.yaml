@@ -1,0 +1,261 @@
+General settings/Class: 'MTX'
+General settings/Subclass: 'pioneer-lx'
+General settings/RobotRadius: 348.00000
+General settings/RobotDiagonal: 120.00000
+General settings/RobotWidth: 500.00000
+General settings/RobotLength: 696.00000
+General settings/RobotLengthFront: 348.00000
+General settings/RobotLengthRear: 348.00000
+General settings/Holonomic: true
+General settings/MaxRVelocity: 180
+General settings/MaxVelocity: 2500
+General settings/MaxLatVelocity: 0
+General settings/HasMoveCommand: true
+General settings/RequestIOPackets: true
+General settings/RequestEncoderPackets: false
+General settings/SwitchToBaudRate: 38400
+
+Conversion factors/AngleConvFactor: 0.00153
+Conversion factors/DistConvFactor: 1.00000
+Conversion factors/VelConvFactor: 1.00000
+Conversion factors/RangeConvFactor: 1.00000
+Conversion factors/DiffConvFactor: 0.00560
+Conversion factors/Vel2Divisor: 20.00000
+Conversion factors/GyroScaler: 1.62600
+
+Accessories the robot has/TableSensingIR: false
+Accessories the robot has/NewTableSensingIR: false
+Accessories the robot has/FrontBumpers: true
+Accessories the robot has/NumFrontBumpers: 3
+Accessories the robot has/RearBumpers: false
+Accessories the robot has/NumRearBumpers: 0
+
+IR parameters/IRNum: 0
+
+Movement control parameters/SettableVelMaxes: true
+Movement control parameters/TransVelMax: 1800
+Movement control parameters/RotVelMax: 180
+Movement control parameters/SettableAccsDecs: true
+Movement control parameters/TransAccel: 500
+Movement control parameters/TransDecel: 600
+Movement control parameters/RotAccel: 150
+Movement control parameters/RotDecel: 200
+Movement control parameters/HasLatVel: false
+Movement control parameters/LatVelMax: 0
+Movement control parameters/LatAccel: 0
+Movement control parameters/LatDecel: 0
+
+GPS parameters/GPSPX: 0
+GPS parameters/GPSPY: 0
+GPS parameters/GPSType: 'standard'
+GPS parameters/GPSPort: 'COM2'
+GPS parameters/GPSBaud: 9600
+
+Compass parameters/CompassType: 'robot'
+
+Sonar parameters/SonarNum: 4
+Sonar parameters/SonarUnit: [0 331 61 10 1 1 0 500 400 1]
+Sonar parameters/SonarUnit: [1 331 -61 -10 1 2 0 500 400 1]
+Sonar parameters/SonarUnit: [2 -317 90 164 1 3 0 500 500 1]
+Sonar parameters/SonarUnit: [3 -317 -90 -164 1 4 0 500 500 1]
+
+SonarBoard_1/SonarAutoConnect: true
+SonarBoard_1/SonarBoardType: 'mtx'
+SonarBoard_1/SonarBoardPortType: 'serial422'
+SonarBoard_1/SonarBoardPort: '/dev/ttyUSB2'
+SonarBoard_1/SonarBoardPowerOutput: 'Sonar_1_Power'
+SonarBoard_1/SonarBaud: 115200
+SonarBoard_1/SonarDelay: 2
+SonarBoard_1/SonarGain: 10
+SonarBoard_1/SonarDetectionThreshold: 25
+SonarBoard_1/SonarMaxRange: 4335
+
+Laser parameters/LaserAutoConnect: true
+Laser parameters/LaserX: 267
+Laser parameters/LaserY: 0
+Laser parameters/LaserTh: 0.00000
+Laser parameters/LaserZ: 190
+Laser parameters/LaserIgnore: '-135--120 120-135'
+Laser parameters/LaserFlipped: true
+Laser parameters/LaserType: 's3series'
+Laser parameters/LaserPortType: 'serial422'
+Laser parameters/LaserPort: '/dev/ttyUSB4'
+Laser parameters/LaserStartingBaudChoice: 230400
+Laser parameters/LaserPowerControlled: false
+Laser parameters/LaserMaxRange: 0
+Laser parameters/LaserCumulativeBufferSize: 0
+
+Laser 2 parameters/LaserAutoConnect: false
+Laser 2 parameters/LaserX: 0
+Laser 2 parameters/LaserY: 0
+Laser 2 parameters/LaserTh: 0.00000
+Laser 2 parameters/LaserZ: 0
+Laser 2 parameters/LaserFlipped: false
+Laser 2 parameters/LaserPowerControlled: true
+Laser 2 parameters/LaserMaxRange: 0
+Laser 2 parameters/LaserCumulativeBufferSize: 0
+
+Battery_1/BatteryAutoConnect: true
+Battery_1/BatteryType: 'mtx'
+Battery_1/BatteryPortType: 'serial'
+Battery_1/BatteryPort: '/dev/ttyUSB1'
+Battery_1/BatteryBaud: 115200
+
+LCD_1/LCDAutoConnect: true
+LCD_1/LCDDisconnectOnConnectFailure: false
+LCD_1/LCDType: 'mtx'
+LCD_1/LCDPortType: 'serial422'
+LCD_1/LCDPort: '/dev/ttyUSB8'
+LCD_1/LCDBaud: 115200
+
+PTZ 1 parameters/PTZAutoConnect: true
+PTZ 1 parameters/PTZType: 'vapix'
+PTZ 1 parameters/PTZInverted: false
+PTZ 1 parameters/PTZSerialPort: 'none'
+PTZ 1 parameters/PTZRobotAuxSerialPort: -1
+PTZ 1 parameters/PTZAddress: '192.168.0.90'
+PTZ 1 parameters/PTZTCPPort: 80
+
+PTZ 2 parameters/PTZAutoConnect: false
+PTZ 2 parameters/PTZType: 'unknown'
+PTZ 2 parameters/PTZInverted: false
+PTZ 2 parameters/PTZSerialPort: 'none'
+PTZ 2 parameters/PTZRobotAuxSerialPort: -1
+PTZ 2 parameters/PTZAddress: '192.168.0.90'
+PTZ 2 parameters/PTZTCPPort: 80
+
+PTZ 3 parameters/PTZAutoConnect: false
+PTZ 3 parameters/PTZType: 'unknown'
+PTZ 3 parameters/PTZInverted: false
+PTZ 3 parameters/PTZSerialPort: 'none'
+PTZ 3 parameters/PTZRobotAuxSerialPort: -1
+PTZ 3 parameters/PTZAddress: '192.168.0.90'
+PTZ 3 parameters/PTZTCPPort: 80
+
+PTZ 4 parameters/PTZAutoConnect: false
+PTZ 4 parameters/PTZType: 'unknown'
+PTZ 4 parameters/PTZInverted: false
+PTZ 4 parameters/PTZSerialPort: 'none'
+PTZ 4 parameters/PTZRobotAuxSerialPort: -1
+PTZ 4 parameters/PTZAddress: '192.168.0.90'
+PTZ 4 parameters/PTZTCPPort: 80
+
+PTZ 5 parameters/PTZAutoConnect: false
+PTZ 5 parameters/PTZType: 'unknown'
+PTZ 5 parameters/PTZInverted: false
+PTZ 5 parameters/PTZSerialPort: 'none'
+PTZ 5 parameters/PTZRobotAuxSerialPort: -1
+PTZ 5 parameters/PTZAddress: '192.168.0.90'
+PTZ 5 parameters/PTZTCPPort: 80
+
+PTZ 6 parameters/PTZAutoConnect: false
+PTZ 6 parameters/PTZType: 'unknown'
+PTZ 6 parameters/PTZInverted: false
+PTZ 6 parameters/PTZSerialPort: 'none'
+PTZ 6 parameters/PTZRobotAuxSerialPort: -1
+PTZ 6 parameters/PTZAddress: '192.168.0.90'
+PTZ 6 parameters/PTZTCPPort: 80
+
+PTZ 7 parameters/PTZAutoConnect: false
+PTZ 7 parameters/PTZType: 'unknown'
+PTZ 7 parameters/PTZInverted: false
+PTZ 7 parameters/PTZSerialPort: 'none'
+PTZ 7 parameters/PTZRobotAuxSerialPort: -1
+PTZ 7 parameters/PTZAddress: '192.168.0.90'
+PTZ 7 parameters/PTZTCPPort: 80
+
+PTZ 8 parameters/PTZAutoConnect: false
+PTZ 8 parameters/PTZType: 'unknown'
+PTZ 8 parameters/PTZInverted: false
+PTZ 8 parameters/PTZSerialPort: 'none'
+PTZ 8 parameters/PTZRobotAuxSerialPort: -1
+PTZ 8 parameters/PTZAddress: '192.168.0.90'
+PTZ 8 parameters/PTZTCPPort: 80
+
+Video 1 parameters/VideoAutoConnect: true
+Video 1 parameters/VideoType: 'vapix'
+Video 1 parameters/VideoInverted: false
+Video 1 parameters/VideoWidth: -1
+Video 1 parameters/VideoHeight: -1
+Video 1 parameters/VideoDeviceIndex: -1
+Video 1 parameters/VideoDeviceName: 'none'
+Video 1 parameters/VideoChannel: -1
+Video 1 parameters/VideoAddress: '192.168.0.90'
+Video 1 parameters/VideoTCPPort: 80
+
+Video 2 parameters/VideoAutoConnect: false
+Video 2 parameters/VideoType: 'unknown'
+Video 2 parameters/VideoInverted: false
+Video 2 parameters/VideoWidth: -1
+Video 2 parameters/VideoHeight: -1
+Video 2 parameters/VideoDeviceIndex: -1
+Video 2 parameters/VideoDeviceName: 'none'
+Video 2 parameters/VideoChannel: -1
+Video 2 parameters/VideoAddress: '192.168.0.90'
+Video 2 parameters/VideoTCPPort: 80
+
+Video 3 parameters/VideoAutoConnect: false
+Video 3 parameters/VideoType: 'unknown'
+Video 3 parameters/VideoInverted: false
+Video 3 parameters/VideoWidth: -1
+Video 3 parameters/VideoHeight: -1
+Video 3 parameters/VideoDeviceIndex: -1
+Video 3 parameters/VideoDeviceName: 'none'
+Video 3 parameters/VideoChannel: -1
+Video 3 parameters/VideoAddress: '192.168.0.90'
+Video 3 parameters/VideoTCPPort: 80
+
+Video 4 parameters/VideoAutoConnect: false
+Video 4 parameters/VideoType: 'unknown'
+Video 4 parameters/VideoInverted: false
+Video 4 parameters/VideoWidth: -1
+Video 4 parameters/VideoHeight: -1
+Video 4 parameters/VideoDeviceIndex: -1
+Video 4 parameters/VideoDeviceName: 'none'
+Video 4 parameters/VideoChannel: -1
+Video 4 parameters/VideoAddress: '192.168.0.90'
+Video 4 parameters/VideoTCPPort: 80
+
+Video 5 parameters/VideoAutoConnect: false
+Video 5 parameters/VideoType: 'unknown'
+Video 5 parameters/VideoInverted: false
+Video 5 parameters/VideoWidth: -1
+Video 5 parameters/VideoHeight: -1
+Video 5 parameters/VideoDeviceIndex: -1
+Video 5 parameters/VideoDeviceName: 'none'
+Video 5 parameters/VideoChannel: -1
+Video 5 parameters/VideoAddress: '192.168.0.90'
+Video 5 parameters/VideoTCPPort: 80
+
+Video 6 parameters/VideoAutoConnect: false
+Video 6 parameters/VideoType: 'unknown'
+Video 6 parameters/VideoInverted: false
+Video 6 parameters/VideoWidth: -1
+Video 6 parameters/VideoHeight: -1
+Video 6 parameters/VideoDeviceIndex: -1
+Video 6 parameters/VideoDeviceName: 'none'
+Video 6 parameters/VideoChannel: -1
+Video 6 parameters/VideoAddress: '192.168.0.90'
+Video 6 parameters/VideoTCPPort: 80
+
+Video 7 parameters/VideoAutoConnect: false
+Video 7 parameters/VideoType: 'unknown'
+Video 7 parameters/VideoInverted: false
+Video 7 parameters/VideoWidth: -1
+Video 7 parameters/VideoHeight: -1
+Video 7 parameters/VideoDeviceIndex: -1
+Video 7 parameters/VideoDeviceName: 'none'
+Video 7 parameters/VideoChannel: -1
+Video 7 parameters/VideoAddress: '192.168.0.90'
+Video 7 parameters/VideoTCPPort: 80
+
+Video 8 parameters/VideoAutoConnect: false
+Video 8 parameters/VideoType: 'unknown'
+Video 8 parameters/VideoInverted: false
+Video 8 parameters/VideoWidth: -1
+Video 8 parameters/VideoHeight: -1
+Video 8 parameters/VideoDeviceIndex: -1
+Video 8 parameters/VideoDeviceName: 'none'
+Video 8 parameters/VideoChannel: -1
+Video 8 parameters/VideoAddress: '192.168.0.90'
+Video 8 parameters/VideoTCPPort: 80
