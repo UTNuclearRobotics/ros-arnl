@@ -35,7 +35,7 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
   tf::Quaternion q;
   if(laser->hasSensorPosition())
   {
-    lasertf.setOrigin(tf::Vector3(laser->getSensorPositionX(), laser->getSensorPositionY(), laser->getSensorPositionZ()));
+    lasertf.setOrigin(tf::Vector3(laser->getSensorPositionX()/1000.0, laser->getSensorPositionY()/1000.0, laser->getSensorPositionZ()/1000.0));
     q.setRPY(0, 0, laser->getSensorPositionTh());
   }
   else
@@ -49,7 +49,6 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
   laserscan.header.frame_id = "laser_frame";
   laserscan.angle_min = ArMath::degToRad(laser->getStartDegrees());
   laserscan.angle_max = ArMath::degToRad(laser->getEndDegrees());
-  laserscan.time_increment = 5.5*std::pow(10,-9); // 5.5ns
   laserscan.range_min = 0;
   laserscan.range_max = laser->getMaxRange() / 1000.0;
   pointcloud.header.frame_id = globaltfname;
@@ -63,6 +62,7 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
     laserscan.angle_increment = laser->getIncrementChoiceDouble();
   }
   assert(laserscan.angle_increment > 0);
+  laserscan.angle_increment *= M_PI/180.0;
 }
 
 LaserPublisher::~LaserPublisher()
@@ -89,7 +89,7 @@ void LaserPublisher::publishLaserScan()
   const std::list<ArSensorReading*> *readings = laser->getRawReadings(); 
   assert(readings);
 
-  laserscan.ranges.reserve(readings->size());
+  laserscan.ranges.resize(readings->size());
 
   size_t n = 0;
   if (laser->getFlipped()) {
@@ -97,7 +97,7 @@ void LaserPublisher::publishLaserScan()
     for(std::list<ArSensorReading*>::const_reverse_iterator r = readings->rbegin(); r != readings->rend(); ++r)
     {
       assert(*r);
-      laserscan.ranges.push_back((*r)->getRange() / 1000.0);
+      laserscan.ranges[n] = (*r)->getRange() / 1000.0;
       ++n;
     }
   }
@@ -105,7 +105,7 @@ void LaserPublisher::publishLaserScan()
     for(std::list<ArSensorReading*>::const_iterator r = readings->begin(); r != readings->end(); ++r)
     {
       assert(*r);
-      laserscan.ranges.push_back((*r)->getRange() / 1000.0);
+      laserscan.ranges[n] = (*r)->getRange() / 1000.0;
       ++n;
     }
   }
