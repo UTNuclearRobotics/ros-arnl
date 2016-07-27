@@ -9,6 +9,7 @@
 #include "ArnlSystem.h"
 #include "LaserPublisher.h"
 #include <rosarnl/BatteryStatus.h>
+#include <rosarnl/WheelLight.h>
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
@@ -87,6 +88,7 @@ protected:
   ros::ServiceServer stop_srv;
   ros::ServiceServer dock_srv;
   ros::ServiceServer undock_srv;
+  ros::ServiceServer wheel_light_srv;
   ros::ServiceServer global_localization_srv;
 
   /**
@@ -130,6 +132,13 @@ protected:
    * @return True on success, false on failure.
    */
   bool undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @breif Perform global localization. ROS service callback function.
+   * @srv std_srvs::Empty
+   * @return True on success, false on failure.
+   */
+  bool wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl::WheelLight::Response& response);
   
   /**
    * @breif Perform global localization. ROS service callback function.
@@ -251,6 +260,13 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
   undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
+  
+  // Only advertise the wheel light service if the robot is equipped with them
+  std::string robot_type;
+  ros::param::param<std::string>("General settings/Subclass", robot_type, "not_found");
+  if (robot_type == "pioneer-lx") {
+    wheel_light_srv = n.advertiseService("wheel_lights", &RosArnlNode::wheel_light_cb, this);
+  }
 
   global_localization_srv = n.advertiseService("global_localization", &RosArnlNode::global_localization_srv_cb, this);
 
@@ -538,6 +554,31 @@ bool RosArnlNode::undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::
     }
     arnl.modeDock->undock();
     return true;
+}
+
+bool RosArnlNode::wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl::WheelLight::Response& response)
+{
+  // Validate input
+  if (request.mode < 1 || request.mode > 10 || request.value < 0 || request.value > 100) {
+    return false;
+  }
+  
+  char data[4];
+  data[0] = request.mode;
+  
+  if (request.mode == 6) {
+    data[1] = request.value;
+  }
+  else {
+    data[1] = 50;
+  }
+  
+  data[3] = 0;
+  data[4] = 0;
+  
+  arnl.robot->comDataN(ArCommands::WHEEL_LIGHT, (const char*)&data, 4);
+  
+  return true;
 }
 
 bool RosArnlNode::global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)

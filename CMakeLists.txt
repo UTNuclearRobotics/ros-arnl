@@ -31,10 +31,10 @@ add_message_files(
 )
 
 #uncomment if you have defined services
-#add_service_files(
-#  FILES
-#  # TODO: List your msg files here
-#)
+add_service_files(
+  FILES
+  WheelLight.srv
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
