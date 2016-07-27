@@ -71,20 +71,18 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
   
   // LaserIgnore is assumed to consist of ranges given by pairs of values
   if (laser_ignore_list.size() % 2) {
-    ROS_WARN("Parameter LaserIgnore has odd number of values.");
+    ROS_WARN("Parameter LaserIgnore has odd number of values: %u", laser_ignore_list.size());
   }
   else {
     //// Determine indices to ignore in laser data
     // Iterate over range of vision
-    for (float angle = laserscan.angle_min; angle <= laserscan.angle_max; angle += laserscan.angle_increment) {
-      
+    for (float angle = laser->getStartDegrees(), end = laser->getEndDegrees(); angle <= end; angle += laser->getIncrementChoiceDouble()) {
       laser_ignore_indices.push_back(true); // Data is valid by default
 
       // Check each ignore range
       for (size_t i = 0; i < laser_ignore_list.size(); i += 2) {
-	
 	// Check if angle is in ignore range
-	if (angle > laser_ignore_list.at(i) && angle < laser_ignore_list.at(i+1)) {
+	if (angle >= laser_ignore_list.at(i) && angle <= laser_ignore_list.at(i+1)) {
 	  laser_ignore_indices.back() = false; // Data is not valid
 	  break;
 	}
@@ -120,6 +118,7 @@ void LaserPublisher::publishLaserScan()
   assert(readings);
 
   laserscan.ranges.resize(readings->size());
+  laser_ignore_indices.resize(readings->size());
 
   size_t n = 0;
   if (laser->getFlipped()) {

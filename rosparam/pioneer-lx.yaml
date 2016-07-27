@@ -54,10 +54,10 @@ GPS_parameters/GPSBaud: 9600
 Compass_parameters/CompassType: 'robot'
 
 Sonar_parameters/SonarNum: 4
-Sonar_parameters/SonarUnit: [0  331  61  10  1 1 0 500 400 1]
-Sonar_parameters/SonarUnit: [1  331 -61 -10  1 2 0 500 400 1]
-Sonar_parameters/SonarUnit: [2 -317  90  164 1 3 0 500 500 1]
-Sonar_parameters/SonarUnit: [3 -317 -90 -164 1 4 0 500 500 1]
+Sonar_parameters/SonarUnit: [0,  331,  61,  10,  1, 1, 0, 500, 400, 1]
+Sonar_parameters/SonarUnit: [1,  331, -61, -10,  1, 2, 0, 500, 400, 1]
+Sonar_parameters/SonarUnit: [2, -317,  90,  164, 1, 3, 0, 500, 500, 1]
+Sonar_parameters/SonarUnit: [3, -317, -90, -164, 1, 4, 0, 500, 500, 1]
 
 SonarBoard_1/SonarAutoConnect: true
 SonarBoard_1/SonarBoardType: 'mtx'
@@ -75,7 +75,7 @@ Laser_parameters/LaserX: 267
 Laser_parameters/LaserY: 0
 Laser_parameters/LaserTh: 0.00000
 Laser_parameters/LaserZ: 190
-Laser_parameters/LaserIgnore: [-135 -120 120 -135]
+Laser_parameters/LaserIgnore: [-135, -120, 120, 135]
 Laser_parameters/LaserFlipped: true
 Laser_parameters/LaserType: 's3series'
 Laser_parameters/LaserPortType: 'serial422'
