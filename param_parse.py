@@ -24,12 +24,15 @@ def parseLine(line):
   if line.find("Section") == 0:
     index = len("Section")
     namespace = line[index:].strip()
+    namespace = namespace.replace(' ', '_')
     return "\n"
   else:
     # Separate the label and value
     index = line.find(' ')
     if index != -1:
       label = line[0:index].strip() + ':'
+      label = label.replace(' ', '_')
+      
       value = line[(index+1):].strip()
       
       if not label or not value:

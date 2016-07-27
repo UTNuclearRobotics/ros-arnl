@@ -263,7 +263,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   
   // Only advertise the wheel light service if the robot is equipped with them
   std::string robot_type;
-  ros::param::param<std::string>("General settings/Subclass", robot_type, "not_found");
+  ros::param::param<std::string>("General_settings/Subclass", robot_type, "not_found");
   if (robot_type == "pioneer-lx") {
     wheel_light_srv = n.advertiseService("wheel_lights", &RosArnlNode::wheel_light_cb, this);
   }

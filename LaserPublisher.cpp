@@ -67,7 +67,7 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
   
   // Check LaserIgnore setting
   std::vector<int> laser_ignore_list;
-  _n.getParam("Laser parameters/LaserIgnore", laser_ignore_list);
+  _n.getParam("Laser_parameters/LaserIgnore", laser_ignore_list);
   
   // LaserIgnore is assumed to consist of ranges given by pairs of values
   if (laser_ignore_list.size() % 2) {

@@ -1,16 +1,8 @@
 <launch>
 
-<node
-    name = "rosarnl_node"
-    pkg	 = "rosarnl" 
-    type = "rosarnl_node"
-    args = ""
-  
-    
-    output = "screen"
-  />
-
 <arg name="param_file" default="$(find rosarnl)/rosparam/pioneer-lx.yaml"/>
-<rosparam command="load" file="$(arg param_file)" ns="PioneerLX"/>
+<node name = "rosarnl_node" pkg = "rosarnl" type = "rosarnl_node" args = "" output = "screen">
+	<rosparam command="load" file="$(arg param_file)"/>
+</node>
 
 </launch>
