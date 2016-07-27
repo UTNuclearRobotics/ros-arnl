@@ -63,6 +63,36 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
   }
   assert(laserscan.angle_increment > 0);
   laserscan.angle_increment *= M_PI/180.0;
+  
+  
+  // Check LaserIgnore setting
+  std::vector<int> laser_ignore_list;
+  _n.getParam("Laser parameters/LaserIgnore", laser_ignore_list);
+  
+  // LaserIgnore is assumed to consist of ranges given by pairs of values
+  if (laser_ignore_list.size() % 2) {
+    ROS_WARN("Parameter LaserIgnore has odd number of values.");
+  }
+  else {
+    //// Determine indices to ignore in laser data
+    // Iterate over range of vision
+    for (float angle = laserscan.angle_min; angle <= laserscan.angle_max; angle += laserscan.angle_increment) {
+      
+      laser_ignore_indices.push_back(true); // Data is valid by default
+
+      // Check each ignore range
+      for (size_t i = 0; i < laser_ignore_list.size(); i += 2) {
+	
+	// Check if angle is in ignore range
+	if (angle > laser_ignore_list.at(i) && angle < laser_ignore_list.at(i+1)) {
+	  laser_ignore_indices.back() = false; // Data is not valid
+	  break;
+	}
+	
+      }
+    }
+  }
+  
 }
 
 LaserPublisher::~LaserPublisher()
@@ -97,7 +127,14 @@ void LaserPublisher::publishLaserScan()
     for(std::list<ArSensorReading*>::const_reverse_iterator r = readings->rbegin(); r != readings->rend(); ++r)
     {
       assert(*r);
-      laserscan.ranges[n] = (*r)->getRange() / 1000.0;
+      
+      if (laser_ignore_indices[n]) {
+	laserscan.ranges[n] = (*r)->getRange() / 1000.0;
+      }
+      else {
+	laserscan.ranges[n] = -1;
+      }
+      
       ++n;
     }
   }
@@ -105,7 +142,14 @@ void LaserPublisher::publishLaserScan()
     for(std::list<ArSensorReading*>::const_iterator r = readings->begin(); r != readings->end(); ++r)
     {
       assert(*r);
-      laserscan.ranges[n] = (*r)->getRange() / 1000.0;
+      
+      if (laser_ignore_indices[n]) {
+	laserscan.ranges[n] = (*r)->getRange() / 1000.0;
+      }
+      else {
+	laserscan.ranges[n] = -1;
+      }
+      
       ++n;
     }
   }

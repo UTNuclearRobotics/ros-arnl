@@ -75,7 +75,7 @@ Laser parameters/LaserX: 267
 Laser parameters/LaserY: 0
 Laser parameters/LaserTh: 0.00000
 Laser parameters/LaserZ: 190
-Laser parameters/LaserIgnore: '-135--120 120-135'
+Laser parameters/LaserIgnore: [-135 -120 120 -135]
 Laser parameters/LaserFlipped: true
 Laser parameters/LaserType: 's3series'
 Laser parameters/LaserPortType: 'serial422'
