@@ -672,9 +672,16 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   // preempted, which allows it to work in combination with MobileEyes or other
   // clients as well as the ros action client.
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: begin execution for new goal.");
+  
+  // Transform to odom frame
+  tf::TransformListener listener;
+  geometry_msgs::PoseStamped transformed_goal;
+  listener.transformPose(frame_id_map, goal->target_pose, transformed_goal);
+  
   action_executing  = true;
-  ArPose goalpose = rosPoseToArPose(goal->target_pose);
+  ArPose goalpose = rosPoseToArPose(transformed_goal);
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: planning to goal %.0fmm, %.0fmm, %.0fdeg", goalpose.getX(), goalpose.getY(), goalpose.getTh());
+  
   bool heading = !ArMath::isNan(goalpose.getTh());
   //arnl.pathTask->pathPlanToPose(goalpose, heading);
   arnl.modeGoto->gotoPose(goalpose, heading);
@@ -697,7 +704,11 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
       {
         // we were preempted by a new goal
         move_base_msgs::MoveBaseGoalConstPtr newgoal = actionServer.acceptNewGoal();
-        goalpose = rosPoseToArPose(newgoal->target_pose);
+	
+	// Transform to odom frame
+	listener.transformPose(frame_id_map, newgoal->target_pose, transformed_goal);
+	
+        goalpose = rosPoseToArPose(transformed_goal);
         ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: new goal interrupted current goal.  planning to new goal %.0fmm, %.0fmm, %.0fdeg", goalpose.getX(), goalpose.getY(), goalpose.getTh());
         bool heading = !ArMath::isNan(goalpose.getTh());
         arnl.modeGoto->gotoPose(goalpose, heading);
