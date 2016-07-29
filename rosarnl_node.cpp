@@ -239,7 +239,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   // See ROS Wiki for further details.
 
   tf_prefix = tf::getPrefixParam(n);
-  frame_id_map = tf::resolve(tf_prefix, "map");
+  frame_id_map = tf::resolve(tf_prefix, "odom");
   frame_id_base_link = tf::resolve(tf_prefix, "base_link");
   frame_id_bumper = tf::resolve(tf_prefix, "bumpers_frame");
   frame_id_sonar = tf::resolve(tf_prefix, "sonar_frame");
@@ -347,7 +347,7 @@ void RosArnlNode::publish()
   tf::poseTFToMsg(tf::Transform(tf::createQuaternionFromYaw(pos.getTh()*M_PI/180), tf::Vector3(pos.getX()/1000,
     pos.getY()/1000, 0)), pose_msg.pose); 
 
-  pose_msg.header.frame_id = "map";
+  pose_msg.header.frame_id = "odom";
 
   // ARIA/ARNL times are in reference to an arbitrary starting time, not OS
   // clock, so find the time elapsed between now and last ARNL localization
