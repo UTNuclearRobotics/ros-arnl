@@ -28,7 +28,6 @@ protected:
   tf::Transform lasertf;
   tf::TransformBroadcaster transform_broadcaster;
   bool broadcast_tf;
-  std::vector<bool> laser_ignore_indices;
 };
 
 #endif

@@ -62,35 +62,7 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
     laserscan.angle_increment = laser->getIncrementChoiceDouble();
   }
   assert(laserscan.angle_increment > 0);
-  laserscan.angle_increment *= M_PI/180.0;
-  
-  
-  // Check LaserIgnore setting
-  std::vector<int> laser_ignore_list;
-  _n.getParam("Laser_parameters/LaserIgnore", laser_ignore_list);
-  
-  // LaserIgnore is assumed to consist of ranges given by pairs of values
-  if (laser_ignore_list.size() % 2) {
-    ROS_WARN("Parameter LaserIgnore has odd number of values: %u", laser_ignore_list.size());
-  }
-  else {
-    //// Determine indices to ignore in laser data
-    // Iterate over range of vision
-    for (float angle = laser->getStartDegrees(), end = laser->getEndDegrees(); angle <= end; angle += laser->getIncrementChoiceDouble()) {
-      laser_ignore_indices.push_back(true); // Data is valid by default
-
-      // Check each ignore range
-      for (size_t i = 0; i < laser_ignore_list.size(); i += 2) {
-	// Check if angle is in ignore range
-	if (angle >= laser_ignore_list.at(i) && angle <= laser_ignore_list.at(i+1)) {
-	  laser_ignore_indices.back() = false; // Data is not valid
-	  break;
-	}
-	
-      }
-    }
-  }
-  
+  laserscan.angle_increment *= M_PI/180.0;  
 }
 
 LaserPublisher::~LaserPublisher()
@@ -118,7 +90,6 @@ void LaserPublisher::publishLaserScan()
   assert(readings);
 
   laserscan.ranges.resize(readings->size());
-  laser_ignore_indices.resize(readings->size());
 
   size_t n = 0;
   if (laser->getFlipped()) {
@@ -127,11 +98,11 @@ void LaserPublisher::publishLaserScan()
     {
       assert(*r);
       
-      if (laser_ignore_indices[n]) {
-	laserscan.ranges[n] = (*r)->getRange() / 1000.0;
+      if ((*r)->getIgnoreThisReading()) {
+	laserscan.ranges[n] = -1;
       }
       else {
-	laserscan.ranges[n] = -1;
+	laserscan.ranges[n] = (*r)->getRange() / 1000.0;
       }
       
       ++n;
@@ -142,11 +113,11 @@ void LaserPublisher::publishLaserScan()
     {
       assert(*r);
       
-      if (laser_ignore_indices[n]) {
-	laserscan.ranges[n] = (*r)->getRange() / 1000.0;
+      if ((*r)->getIgnoreThisReading()) {
+	laserscan.ranges[n] = -1;
       }
       else {
-	laserscan.ranges[n] = -1;
+	laserscan.ranges[n] = (*r)->getRange() / 1000.0;
       }
       
       ++n;
