@@ -171,6 +171,8 @@ protected:
   std::string frame_id_bumper;
   std::string frame_id_sonar;
 
+  tf::TransformListener listener;
+
   ros::Subscriber initialpose_sub;
   void initialpose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
 
@@ -263,7 +265,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   
   // Only advertise the wheel light service if the robot is equipped with them
   std::string robot_type;
-  ros::param::param<std::string>("General_settings/Subclass", robot_type, "not_found");
+  n.param<std::string>("General_settings/Subclass", robot_type, "not_found");
   if (robot_type == "pioneer-lx") {
     wheel_light_srv = n.advertiseService("wheel_lights", &RosArnlNode::wheel_light_cb, this);
   }
@@ -563,20 +565,19 @@ bool RosArnlNode::wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl:
     return false;
   }
   
-  char data[4];
-  data[0] = request.mode;
+  struct {
+    ArTypes::UByte pattern;
+    ArTypes::Byte value;
+    ArTypes::UByte flags;
+    ArTypes::UByte flags2;
+  } msg;
+
+  msg.pattern = request.mode;
+  msg.value = request.value;
+  msg.flags = 0;
+  msg.flags2 = 0;
   
-  if (request.mode == 6) {
-    data[1] = request.value;
-  }
-  else {
-    data[1] = 50;
-  }
-  
-  data[3] = 0;
-  data[4] = 0;
-  
-  arnl.robot->comDataN(ArCommands::WHEEL_LIGHT, (const char*)&data, 4);
+  arnl.robot->comDataN(ArCommands::WHEEL_LIGHT, (const char*)&msg, 4);
   
   return true;
 }
@@ -674,7 +675,6 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: begin execution for new goal.");
   
   // Transform to odom frame
-  tf::TransformListener listener;
   geometry_msgs::PoseStamped transformed_goal;
   listener.transformPose(frame_id_map, goal->target_pose, transformed_goal);
   
