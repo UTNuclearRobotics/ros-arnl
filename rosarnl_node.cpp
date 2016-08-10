@@ -7,6 +7,7 @@
 #include "ArDocking.h"
 
 #include "ArnlSystem.h"
+#include "ArCepstral.h"
 #include "LaserPublisher.h"
 #include <rosarnl/BatteryStatus.h>
 #include <rosarnl/WheelLight.h>
@@ -59,6 +60,7 @@ public:
 protected:
   ros::NodeHandle n;
   ArnlSystem &arnl;
+  ArCepstral cepstral;
 
   ArFunctorC<RosArnlNode> myPublishCB;
 
@@ -201,6 +203,10 @@ protected:
   // request rosarnl to shutdown
   ros::Subscriber shutdown_sub;
   void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
+  
+  // Speech synthesizer
+  ros::Subscriber speech__sub_;
+  void speech_cb(const std_msgs::StringConstPtr &msg);
 
   ros::Publisher current_goal_pub;
   void arnl_new_goal_cb(ArPose p);
@@ -291,6 +297,8 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   cmd_drive_sub = n.subscribe("cmd_vel", 1, (boost::function <void(const geometry_msgs::TwistConstPtr&)>) boost::bind(&RosArnlNode::cmdvel_cb, this, _1));
   goalname_sub = n.subscribe("goalname", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::goalname_sub_cb, this, _1));
   shutdown_sub = n.subscribe("/shutdown", 1, (boost::function <void(const std_msgs::EmptyConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
+  
+  
 
   current_goal_pub = n.advertise<geometry_msgs::Pose>("current_goal", 1, true);
   arnl.pathTask->addNewGoalCB(new ArFunctor1C<RosArnlNode, ArPose>(this, &RosArnlNode::arnl_new_goal_cb));
@@ -305,6 +313,14 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   arnl.robot->lock();
   arnl.robot->addSensorInterpTask("ROSPublishingTask", 100, &myPublishCB);
   arnl.robot->unlock();
+  
+  // Speech synthesis
+  if(cepstral.init()) {
+    speech__sub_ = n.subscribe("speak", 5, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::speech_cb, this, _1));
+  }
+  else {
+    ROS_ERROR("Error initializing speech synthesizer.");
+  }
 }
 
 RosArnlNode::~RosArnlNode()
@@ -816,7 +832,10 @@ bool RosArnlNode::check_estop(const char *s) {
   return e;
 }
 
-
+void RosArnlNode::speech_cb(const std_msgs::StringConstPtr &msg)
+{
+  cepstral.speak(msg->data.c_str());
+}
 
 
 

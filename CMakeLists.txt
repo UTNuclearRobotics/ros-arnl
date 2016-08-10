@@ -67,11 +67,14 @@ ELSE()
   endif()
 ENDIF()
 
+include_directories( /usr/local/Aria/ArSpeechSynth_Cepstral/include)
+link_directories(/usr/local/Aria/lib)
+
 add_executable(rosarnl_node rosarnl_node.cpp ArnlSystem.cpp RobotMonitor.cpp LaserPublisher.cpp)
 add_dependencies(rosarnl_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp})
 #add_dependencies(rosarnl_node rosarnl_gencpp)
 
-target_link_libraries(rosarnl_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} Arnl BaseArnl ArNetworkingForArnl AriaForArnl pthread dl rt)
+target_link_libraries(rosarnl_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} Arnl BaseArnl ArNetworkingForArnl ArSpeechSynth_Cepstral swift AriaForArnl pthread dl rt)
 set_target_properties(rosarnl_node PROPERTIES COMPILE_FLAGS "-fPIC -D_REENTRANT -Wall")
 
 #############
