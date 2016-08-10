@@ -8,6 +8,9 @@
 
 #include "ArnlSystem.h"
 #include "ArCepstral.h"
+#include "ArSoundsQueue.h"
+#include "ArSpeech.h"
+
 #include "LaserPublisher.h"
 #include <rosarnl/BatteryStatus.h>
 #include <rosarnl/WheelLight.h>
@@ -205,7 +208,7 @@ protected:
   void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
   
   // Speech synthesizer
-  ros::Subscriber speech__sub_;
+  ros::Subscriber speech_sub_;
   void speech_cb(const std_msgs::StringConstPtr &msg);
 
   ros::Publisher current_goal_pub;
@@ -316,7 +319,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   
   // Speech synthesis
   if(cepstral.init()) {
-    speech__sub_ = n.subscribe("speak", 5, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::speech_cb, this, _1));
+    speech_sub_ = n.subscribe("speak", 5, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::speech_cb, this, _1));
   }
   else {
     ROS_ERROR("Error initializing speech synthesizer.");
@@ -834,9 +837,17 @@ bool RosArnlNode::check_estop(const char *s) {
 
 void RosArnlNode::speech_cb(const std_msgs::StringConstPtr &msg)
 {
-  cepstral.speak(msg->data.c_str());
-}
+  ArSoundsQueue soundQueue;
+  soundQueue.addInitCallback(cepstral.getInitCallback());
+  soundQueue.setSpeakCallback(cepstral.getSpeakCallback());
 
+  soundQueue.speak(msg->data.c_str());
+
+  // Run the sound queue in a separate thread, and wait for it to stop:
+  printf("Running sounds queue in the background...\n");
+  soundQueue.runAsync();
+  while (soundQueue.isSpeakingOrPlaying() || !soundQueue.isInitialized());
+}
 
 
 void ariaLogHandler(const char *msg, ArLog::LogLevel level)

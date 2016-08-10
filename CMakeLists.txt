@@ -67,7 +67,7 @@ ELSE()
   endif()
 ENDIF()
 
-include_directories( /usr/local/Aria/ArSpeechSynth_Cepstral/include)
+include_directories(/usr/local/Aria/ArSpeechSynth_Cepstral/include)
 link_directories(/usr/local/Aria/lib)
 
 add_executable(rosarnl_node rosarnl_node.cpp ArnlSystem.cpp RobotMonitor.cpp LaserPublisher.cpp)
