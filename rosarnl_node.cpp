@@ -837,16 +837,7 @@ bool RosArnlNode::check_estop(const char *s) {
 
 void RosArnlNode::speech_cb(const std_msgs::StringConstPtr &msg)
 {
-  ArSoundsQueue soundQueue;
-  soundQueue.addInitCallback(cepstral.getInitCallback());
-  soundQueue.setSpeakCallback(cepstral.getSpeakCallback());
-
-  soundQueue.speak(msg->data.c_str());
-
-  // Run the sound queue in a separate thread, and wait for it to stop:
-  printf("Running sounds queue in the background...\n");
-  soundQueue.runAsync();
-  while (soundQueue.isSpeakingOrPlaying() || !soundQueue.isInitialized());
+  cepstral.speak(msg->data.c_str());
 }
 
 
