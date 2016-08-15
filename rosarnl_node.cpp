@@ -580,8 +580,13 @@ bool RosArnlNode::undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::
 bool RosArnlNode::wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl::WheelLight::Response& response)
 {
   // Validate input
-  if (request.mode < 1 || request.mode > 10 || request.value < 0 || request.value > 100) {
+  if (request.mode < 0 || request.mode > 10 || request.value < 0 || request.value > 100) {
     return false;
+  }
+  
+  if (request.mode == rosarnl::WheelLightRequest::AUTO) {
+    arnl.monitor->setWheelLightDefaultMode(true);
+    return true;
   }
   
   struct {
@@ -596,6 +601,7 @@ bool RosArnlNode::wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl:
   msg.flags = 0;
   msg.flags2 = 0;
   
+  arnl.monitor->setWheelLightDefaultMode(false);
   arnl.robot->comDataN(ArCommands::WHEEL_LIGHT, (const char*)&msg, 4);
   
   return true;
@@ -788,17 +794,6 @@ void RosArnlNode::arnl_goal_interrupted_cb(ArPose p)
     actionServer.setPreempted();
   }
 }
-
-/*void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
-{
-  double transRatio = msg->linear.x*1e3;
-  double rotRatio = msg->angular.z*180/M_PI*1e3;
-  double throttleRatio = 20;
-  double lateralRatio = msg->linear.y*1e3;
-  arnl.robot->lock();
-  arnl.modeRatioDrive->ratioDrive(transRatio, rotRatio, throttleRatio, true, lateralRatio);
-  arnl.robot->unlock();
-}*/
 
 void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 {

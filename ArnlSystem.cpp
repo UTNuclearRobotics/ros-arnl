@@ -11,7 +11,7 @@
 #include "ArDocking.h"
 #include "Aria/ArSystemStatus.h"
 
-#include "RobotMonitor.h"
+
 
 
 
@@ -45,6 +45,7 @@ ArnlSystem::~ArnlSystem()
   if(modeGoto) delete modeGoto;
   if(modeWander) delete modeWander;
   if(robot) delete robot;
+  if(monitor) delete monitor;
 }
 
 ArnlSystem::Error ArnlSystem::setup()
@@ -246,7 +247,7 @@ ArnlSystem::Error ArnlSystem::setup()
 
   ArServerHandlerPopup *popupServer = new ArServerHandlerPopup(serverBase);
 
-  new RobotMonitor(robot, popupServer);
+  monitor = new RobotMonitor(robot, popupServer);
 
 
 

@@ -56,3 +56,6 @@ CATKIN_IGNORE
 # mongodb files
 default_warehouse_mongo_db/
 moveit_db/
+
+# kdevelop config files
+.kdev_include_paths

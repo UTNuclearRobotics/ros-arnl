@@ -19,6 +19,7 @@ RobotMonitor::RobotMonitor(ArRobot *r, ArServerHandlerPopup *ps) :
   handleMotorsDisabledPopupResponseCB(this, &RobotMonitor::handleMotorsDisabledResponse),
   robotMonitorCB(this, &RobotMonitor::robotMonitorTask)
 {
+  wheelLightDefault = true;
   robot->addUserTask("arnlServerRobotMonitor", 30, &robotMonitorCB);
 }
 
@@ -57,10 +58,18 @@ void RobotMonitor::robotMonitorTask()
     robot->comDataN(ArCommands::WHEEL_LIGHT, "\x02\0\0\0", 4); // pattern #2, flash red
   else if(!robot->areMotorsEnabled())
     robot->comDataN(ArCommands::WHEEL_LIGHT, "\x03\0\0\0", 4); // pattern #3, flash yellow
-  else if(fabs(robot->getVel()) < 5)
-    robot->comDataN(ArCommands::WHEEL_LIGHT, "\x0A\0\0\0", 4);  // pattern #10, slow blue flash
-  else
-    robot->comDataN(ArCommands::WHEEL_LIGHT, "\x09\0\0\0", 4);  // pattern 9, blue sweep.
+    
+  else if (wheelLightDefault) {
+    if(fabs(robot->getVel()) < 5)
+      robot->comDataN(ArCommands::WHEEL_LIGHT, "\x0A\0\0\0", 4);  // pattern #10, slow blue flash
+    else
+      robot->comDataN(ArCommands::WHEEL_LIGHT, "\x09\0\0\0", 4);  // pattern 9, blue sweep.
+  }
   
+}
+
+void RobotMonitor::setWheelLightDefaultMode(bool default_on)
+{
+  wheelLightDefault = default_on;
 }
 

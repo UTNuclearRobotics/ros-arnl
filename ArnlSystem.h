@@ -2,6 +2,7 @@
 #define _ARNLSYSTEM_H
 
 #include "ariaUtil.h"
+#include "RobotMonitor.h"
 
 class ArRobot;
 class ArPathPlanningTask;
@@ -46,11 +47,12 @@ class ArnlSystem
     ArMap *map;
     ArTime creationTime;
     ArServerInfoDrawings *drawings;
+    RobotMonitor *monitor;
 
     const char* getServerMode() const ;
     const char* getServerStatus() const ;
     const char* getPathStateName() const ;
-
+    
   protected:
     const char *logprefix;
     bool handleDebugMessage(ArRobotPacket *pkt);

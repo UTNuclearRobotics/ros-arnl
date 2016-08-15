@@ -16,6 +16,8 @@ protected:
 public:
   RobotMonitor(ArRobot *r, ArServerHandlerPopup *ps);
   ~RobotMonitor();
+  
+  void setWheelLightDefaultMode(bool default_on);
 
 protected:
   void handleMotorsDisabledResponse(ArTypes::Byte4 popupID, int button);
@@ -23,6 +25,8 @@ protected:
   // This function is called as a robot task (every 100ms) to check on the robot
   // state and perform feedback and interact with user as needed.
   void robotMonitorTask();
+  
+  bool wheelLightDefault;
 };
 
 #endif
