@@ -7,13 +7,7 @@
 #include "ArDocking.h"
 
 #include "ArnlSystem.h"
-#include "ArCepstral.h"
-#include "ArSoundsQueue.h"
-#include "ArSpeech.h"
-
 #include "LaserPublisher.h"
-#include <rosarnl/BatteryStatus.h>
-#include <rosarnl/WheelLight.h>
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
@@ -39,194 +33,126 @@
 
 class RosArnlNode
 {
-public:
-  RosArnlNode(ros::NodeHandle n, ArnlSystem& arnlsys);
-  virtual ~RosArnlNode();
+  public:
+    RosArnlNode(ros::NodeHandle n, ArnlSystem& arnlsys);
+    virtual ~RosArnlNode();
 
-public:
-  /**
-   * @breif Starts the MoveAction server.
-   * @return True on success.
-   */
-  bool Setup();
-  
-  /**
-   * @breif Begin the main operating loop.
-   */
-  void spin();
-  
-  /**
-   * @breif Update the published topics.
-   */
-  void publish();
+  public:
+    int Setup();
+    void spin();
+    void publish();
 
-protected:
-  ros::NodeHandle n;
-  ArnlSystem &arnl;
-  ArCepstral cepstral;
+  protected:
+    ros::NodeHandle n;
+    ArnlSystem &arnl;
 
-  ArFunctorC<RosArnlNode> myPublishCB;
+    ArFunctorC<RosArnlNode> myPublishCB;
 
-  /**
-   * @breif Convert ROS pose message to Aria ArPose type
-   */
-  ArPose rosPoseToArPose(const geometry_msgs::Pose& p);
-  
-  /**
-   * @breif Convert ROS PoseStamped message to Aria ArPose type
-   */
-  ArPose rosPoseToArPose(const geometry_msgs::PoseStamped& p) { return rosPoseToArPose(p.pose); }
-  
-  /**
-   * @breif Convert ROS PoseStamped message to Aria ARPoseWithTime type
-   */
-  ArPoseWithTime rosPoseStampedToArPoseWithTime(const geometry_msgs::PoseStamped& p);
-  
-  /**
-   * @breif Convert Aria ArPose type to ROS pose message
-   */
-  geometry_msgs::Pose rosPoseToArPose(const ArPose& arpose);
+    ArPose rosPoseToArPose(const geometry_msgs::Pose& p);
+    ArPose rosPoseToArPose(const geometry_msgs::PoseStamped& p) { return rosPoseToArPose(p.pose); }
+    ArPoseWithTime rosPoseStampedToArPoseWithTime(const geometry_msgs::PoseStamped& p); 
+    geometry_msgs::Pose rosPoseToArPose(const ArPose& arpose);
 
-  ros::ServiceServer enable_srv;
-  ros::ServiceServer disable_srv;
-  ros::ServiceServer wander_srv;
-  ros::ServiceServer stop_srv;
-  ros::ServiceServer dock_srv;
-  ros::ServiceServer undock_srv;
-  ros::ServiceServer wheel_light_srv;
-  ros::ServiceServer global_localization_srv;
+    ros::ServiceServer enable_srv;
+    ros::ServiceServer disable_srv;
+    ros::ServiceServer robot_params_srv;
+    ros::ServiceServer wander_srv;
+    ros::ServiceServer stop_srv;
+    ros::ServiceServer dock_srv;
+    ros::ServiceServer undock_srv;
 
-  /**
-   * @breif Enable drive motors. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false on failure.
-   */
-  bool enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
-  /**
-   * @breif Disable drive motors. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false on failure.
-   */
-  bool disable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool disable_motors_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool get_robot_params_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool dock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
+    ros::Publisher motors_state_pub;
+    ros::Publisher dock_state_pub;
+    std_msgs::Bool motors_state;
+    std_msgs::String dock_state;
+    bool published_motors_state;
+    bool published_dock_state;
+
+    ros::Time veltime;
+
+    geometry_msgs::PoseStamped pose_msg;
+    ros::Publisher pose_pub;
+
+    std_msgs::Float64 params_msg;
+    ros::Publisher params_pub;
+
+    ros::Publisher battery_charge_percent_pub;
+    ros::Publisher battery_charge_state_pub;
+
+    geometry_msgs::TransformStamped map_trans;
+    tf::TransformBroadcaster map_broadcaster;
+
+    std::string tf_prefix;
+    std::string frame_id_map;
+    std::string frame_id_base_link;
+    std::string frame_id_bumper;
+    std::string frame_id_sonar;
+
+    ros::Subscriber initialpose_sub;
+    void initialpose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     
-  /**
-   * @breif Activate wander mode. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false if e-stop is active.
-   */
-  bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
-  /**
-   * @breif Stop the platform. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return Always true.
-   */
-  bool stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
-  /**
-   * @breif Go to dock. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false on failure.
-   */
-  bool dock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
-  /**
-   * @breif Undock. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false on failure.
-   */
-  bool undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
-  /**
-   * @breif Perform global localization. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false on failure.
-   */
-  bool wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl::WheelLight::Response& response);
-  
-  /**
-   * @breif Perform global localization. ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false on failure.
-   */
-  bool global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    ros::ServiceServer global_localization_srv;
+    bool global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-  ros::Publisher motors_state_pub;
-  ros::Publisher dock_state_pub;
-  std_msgs::Bool motors_state;
-  std_msgs::String dock_state;
-  bool published_motors_state;
-  bool published_dock_state;
+    ros::Publisher arnl_server_mode_pub;
+    ros::Publisher arnl_server_status_pub;
+    ros::Publisher arnl_shutdown_confirm_pub;
 
-  geometry_msgs::PoseStamped pose_msg;
-  ros::Publisher pose_pub;
+    ros::Publisher arnl_path_state_pub;
+    void arnl_path_state_change_cb();
 
-  // Battery publishing
-  ros::Publisher battery_pub;
-  ros::Time last_battery_pub_time;
-  ros::Duration battery_pub_period;
+    std::string lastServerStatus;
+    std::string lastServerMode;
 
-  geometry_msgs::TransformStamped map_trans;
-  tf::TransformBroadcaster map_broadcaster;
+    // aria call back for cmdvel
+    ros::Subscriber cmd_drive_sub;
+    void cmdvel_cb( const geometry_msgs::TwistConstPtr &msg);
 
-  std::string tf_prefix;
-  std::string frame_id_map;
-  std::string frame_id_base_link;
-  std::string frame_id_bumper;
-  std::string frame_id_sonar;
+    // just request a goal, no actionlib interface:
+    ros::Subscriber simple_goal_sub;
+    void simple_goal_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
 
-  tf::TransformListener listener;
+    // request goal by name
+    ros::Subscriber goalname_sub;
+    void goalname_sub_cb(const std_msgs::StringConstPtr &msg);
 
-  ros::Subscriber initialpose_sub;
-  void initialpose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
+    // request rosarnl to shutdown
+    ros::Subscriber shutdown_sub;
+    void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
 
-  ros::Publisher arnl_server_mode_pub;
-  ros::Publisher arnl_server_status_pub;
-  ros::Publisher arnl_shutdown_confirm_pub;
+    ros::Publisher current_goal_pub;
+    void arnl_new_goal_cb(ArPose p);
 
-  ros::Publisher arnl_path_state_pub;
-  void arnl_path_state_change_cb();
+    // TODO may replace with MoveBase action definitions?
+    typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> ArnlActionServer;
+    ArnlActionServer actionServer;
+    void execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr& goal);
+    bool arnl_goal_done;
+    bool action_executing;
+    bool rosarnl_inventory_running;
+    void arnl_goal_reached_cb(ArPose p);
+    void arnl_goal_failed_cb(ArPose p);
+    void arnl_goal_interrupted_cb(ArPose p);
+    move_base_msgs::MoveBaseActionFeedback move_action_feedback_;
+    move_base_msgs::MoveBaseActionResult move_action_result_;
+    
+    // If robot has e--top button pressed, print a warning and return true. Otherwise return false.
+    bool check_estop(const char *s) {
+        arnl.robot->lock();
+        bool e = arnl.robot->isEStopPressed();
+        arnl.robot->unlock();
+        if(e) ROS_WARN_NAMED("rosarnl_node", "rosarnl_node: Warning: Robot e-stop button pressed, cannot %s", s);
+        return e;
+    }
 
-  std::string lastServerStatus;
-  std::string lastServerMode;
-
-  // aria call back for cmdvel
-  ros::Subscriber cmd_drive_sub;
-  void cmdvel_cb( const geometry_msgs::TwistConstPtr &msg);
-
-  // just request a goal, no actionlib interface:
-  ros::Subscriber simple_goal_sub;
-  void simple_goal_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
-
-  // request goal by name
-  ros::Subscriber goalname_sub;
-  void goalname_sub_cb(const std_msgs::StringConstPtr &msg);
-
-  // request rosarnl to shutdown
-  ros::Subscriber shutdown_sub;
-  void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
-  
-  // Speech synthesizer
-  ros::Subscriber speech_sub_;
-  void speech_cb(const std_msgs::StringConstPtr &msg);
-
-  ros::Publisher current_goal_pub;
-  void arnl_new_goal_cb(ArPose p);
-
-  // TODO may replace with MoveBase action definitions?
-  typedef actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> ArnlActionServer;
-  ArnlActionServer actionServer;
-  void execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr& goal);
-  bool arnl_goal_done;
-  bool action_executing;
-  bool shutdown_requested;
-  void arnl_goal_reached_cb(ArPose p);
-  void arnl_goal_failed_cb(ArPose p);
-  void arnl_goal_interrupted_cb(ArPose p);
-  
-  // If robot has e--top button pressed, print a warning and return true. Otherwise return false.
-  bool check_estop(const char *s);
 };
 
 
@@ -236,7 +162,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   actionServer(nh, "move_base", boost::bind(&RosArnlNode::execute_action_cb, this, _1), false),
   arnl_goal_done(false),
   action_executing(false),
-  shutdown_requested(false)
+  rosarnl_inventory_running(true)
 {
   n = nh;
   
@@ -250,12 +176,21 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   // See ROS Wiki for further details.
 
   tf_prefix = tf::getPrefixParam(n);
-  frame_id_map = tf::resolve(tf_prefix, "odom");
+  frame_id_map = tf::resolve(tf_prefix, "map");
   frame_id_base_link = tf::resolve(tf_prefix, "base_link");
   frame_id_bumper = tf::resolve(tf_prefix, "bumpers_frame");
   frame_id_sonar = tf::resolve(tf_prefix, "sonar_frame");
+  double robot_length = arnl.robot->getRobotLength();
+  ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Robot length = %4.3f",robot_length);
+  ros::param::set("/rosarnl_node/robot_length", robot_length);
+  
 
-  motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true);
+
+  
+  // initialize to all invalid if pose is with covariance
+  // pose_msg.pose.covariance.assign(-1);
+
+  motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true /*latch*/ );
   motors_state.data = false;
   published_motors_state = false;
   
@@ -263,21 +198,19 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   dock_state.data = "";
   published_dock_state = false;
 
-  pose_pub = n.advertise<geometry_msgs::PoseStamped>("amcl_pose", 5, true);
+  pose_pub = n.advertise<geometry_msgs::PoseStamped>("amcl_pose", 5, true /*latch*/);
+
+  params_pub = n.advertise<std_msgs::Float64>("params",1, true /*latch*/);
 
   enable_srv = n.advertiseService("enable_motors", &RosArnlNode::enable_motors_cb, this);
   disable_srv = n.advertiseService("disable_motors", &RosArnlNode::disable_motors_cb, this);
+  robot_params_srv = n.advertiseService("get_robot_params", &RosArnlNode::get_robot_params_cb, this);
   wander_srv = n.advertiseService("wander", &RosArnlNode::wander_cb, this);
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
   undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
-  
-  // Only advertise the wheel light service if the robot is equipped with them
-  std::string robot_type;
-  n.param<std::string>("General_settings/Subclass", robot_type, "not_found");
-  if (robot_type == "pioneer-lx") {
-    wheel_light_srv = n.advertiseService("wheel_lights", &RosArnlNode::wheel_light_cb, this);
-  }
+
+  veltime = ros::Time::now();
 
   global_localization_srv = n.advertiseService("global_localization", &RosArnlNode::global_localization_srv_cb, this);
 
@@ -290,9 +223,8 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   
   arnl_path_state_pub = n.advertise<std_msgs::String>("arnl_path_state", -1);
   
-  // Battery Publishing
-  battery_pub = n.advertise<rosarnl::BatteryStatus>("battery_status", 1, true);
-  battery_pub_period = ros::Duration(5.0);
+  battery_charge_percent_pub = n.advertise<std_msgs::Float32>("battery_state_of_charge", -1);
+  battery_charge_state_pub = n.advertise<std_msgs::Int8>("battery_charging_state", -1);
 
   // TODO the move_base and move_bas_simple topics should be in separate node
   // handles?
@@ -300,8 +232,6 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   cmd_drive_sub = n.subscribe("cmd_vel", 1, (boost::function <void(const geometry_msgs::TwistConstPtr&)>) boost::bind(&RosArnlNode::cmdvel_cb, this, _1));
   goalname_sub = n.subscribe("goalname", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::goalname_sub_cb, this, _1));
   shutdown_sub = n.subscribe("/shutdown", 1, (boost::function <void(const std_msgs::EmptyConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
-  
-  
 
   current_goal_pub = n.advertise<geometry_msgs::Pose>("current_goal", 1, true);
   arnl.pathTask->addNewGoalCB(new ArFunctor1C<RosArnlNode, ArPose>(this, &RosArnlNode::arnl_new_goal_cb));
@@ -316,14 +246,6 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   arnl.robot->lock();
   arnl.robot->addSensorInterpTask("ROSPublishingTask", 100, &myPublishCB);
   arnl.robot->unlock();
-  
-  // Speech synthesis
-  if(cepstral.init()) {
-    speech_sub_ = n.subscribe("speak", 5, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::speech_cb, this, _1));
-  }
-  else {
-    ROS_ERROR("Error initializing speech synthesizer.");
-  }
 }
 
 RosArnlNode::~RosArnlNode()
@@ -331,16 +253,16 @@ RosArnlNode::~RosArnlNode()
   Aria::exit(0);
 }
 
-bool RosArnlNode::Setup()
+int RosArnlNode::Setup()
 {
   actionServer.start();
-  return true;
+  return 0;
 }
 
 void RosArnlNode::spin()
 {
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Running ROS node...");
-  while (!shutdown_requested)
+  while (rosarnl_inventory_running)
   {
     ros::spinOnce();
   }
@@ -351,8 +273,6 @@ void RosArnlNode::spin()
 
 void RosArnlNode::publish()
 {
-  ros::Time current_time = ros::Time::now();
-  
   // todo could only publish if robot not stopped (unless arnl has TriggerTime
   // set in which case it might update localization even ifnot moving), or
   // use a callback from arnl for robot pose updates rather than every aria
@@ -368,7 +288,7 @@ void RosArnlNode::publish()
   tf::poseTFToMsg(tf::Transform(tf::createQuaternionFromYaw(pos.getTh()*M_PI/180), tf::Vector3(pos.getX()/1000,
     pos.getY()/1000, 0)), pose_msg.pose); 
 
-  pose_msg.header.frame_id = "odom";
+  pose_msg.header.frame_id = "map";
 
   // ARIA/ARNL times are in reference to an arbitrary starting time, not OS
   // clock, so find the time elapsed between now and last ARNL localization
@@ -383,6 +303,19 @@ void RosArnlNode::publish()
   // TODO if robot is stopped, ARNL won't re-localize (unless TriggerTime option is
   // configured), so should we just use Time::now() in that case? or do users
   // expect long ages for poses if robot stopped?
+
+#if 0
+  {
+    printf("ros now is   %12d sec + %12d nsec = %f seconds\n", ros::Time::now().sec, ros::Time::now().nsec, ros::Time::now().toSec());
+    ArTime t;
+    printf("aria now is  %12lu sec + %12lu ms\n", t.getSec(), t.getMSec());
+    printf("arnl loc is  %12lu sec + %12lu ms\n", loctime.getSec(), loctime.getMSec());
+    printf("pose stamp:= %12d sec + %12d nsec = %f seconds\n", pose_msg.header.stamp.sec, pose_msg.header.stamp.nsec, pose_msg.header.stamp.toSec());
+    double d = ros::Time::now().toSec() - pose_msg.header.stamp.toSec();
+    printf("diff is  %12f sec, \n", d);
+    puts("----");
+  }
+#endif
 
 #ifndef ROS_ARNL_NO_COVARIANCE
   ArMatrix var;
@@ -419,16 +352,20 @@ void RosArnlNode::publish()
   
   pose_pub.publish(pose_msg);
 
-  // Battery info publishing
-  // Check for periodic timeout
-  if (current_time - last_battery_pub_time > battery_pub_period)
-  {
-    rosarnl::BatteryStatus battery_msg;
-    battery_msg.charge_percent = arnl.robot->getStateOfCharge();
-    battery_msg.charging_state = arnl.robot->getChargeState();
-    battery_pub.publish(battery_msg);
-    last_battery_pub_time = current_time;
-  }
+
+
+  
+
+
+  
+  //Battery info publishing
+  std_msgs::Float32 battery_percent_msg;
+  battery_percent_msg.data = arnl.robot->getStateOfCharge();
+  battery_charge_percent_pub.publish(battery_percent_msg);
+  
+  std_msgs::Int8 battery_charging_state_msg;
+  battery_charging_state_msg.data = arnl.robot->getChargeState();
+  battery_charge_state_pub.publish(battery_charging_state_msg);
 
   if(action_executing) 
   {
@@ -499,25 +436,10 @@ bool RosArnlNode::enable_motors_cb(std_srvs::Empty::Request& request, std_srvs::
 {
     ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Enable motors request.");
     arnl.robot->lock();
-    
-    // Check if estop button is pressed.
-    if (check_estop("enable motors")) {
-      return false;
-    }
-    
+    check_estop("enable motors");
     arnl.robot->enableMotors();
     arnl.robot->unlock();
-    
-    // Wait to see if it was successful.
-    ros::Time wait_start_time = ros::Time::now();
-    ros::Duration timeout_duration(1.0);
-    while (!arnl.robot->areMotorsEnabled()) {
-      // Check for timeout
-      if (ros::Time::now() - wait_start_time > timeout_duration) {
-	return false;
-      }
-    }
-    
+  // todo could wait and see if motors do become enabled, and send a response with an error flag if not
     return true;
 }
 
@@ -527,20 +449,16 @@ bool RosArnlNode::disable_motors_cb(std_srvs::Empty::Request& request, std_srvs:
     arnl.robot->lock();
     arnl.robot->disableMotors();
     arnl.robot->unlock();
-    
-    // Wait to see if it was successful.
-    ros::Time wait_start_time = ros::Time::now();
-    ros::Duration timeout_duration(1.0);
-    while (arnl.robot->areMotorsEnabled()) {
-      // Check for timeout
-      if (ros::Time::now() - wait_start_time > timeout_duration) {
-	return false;
-      }
-    }
-    
+  // todo could wait and see if motors do become disabled, and send a response with an error flag if not
     return true;
 }
 
+bool RosArnlNode::get_robot_params_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+  
+  //do something with this
+  return true;
+}
 bool RosArnlNode::wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Enable wander mode request.");
@@ -577,45 +495,12 @@ bool RosArnlNode::undock_cb(std_srvs::Empty::Request& request, std_srvs::Empty::
     return true;
 }
 
-bool RosArnlNode::wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl::WheelLight::Response& response)
-{
-  // Validate input
-  if (request.mode < 0 || request.mode > 10 || request.value < 0 || request.value > 100) {
-    return false;
-  }
-  
-  if (request.mode == rosarnl::WheelLightRequest::AUTO) {
-    arnl.monitor->setWheelLightDefaultMode(true);
-    return true;
-  }
-  
-  struct {
-    ArTypes::UByte pattern;
-    ArTypes::Byte value;
-    ArTypes::UByte flags;
-    ArTypes::UByte flags2;
-  } msg;
-
-  msg.pattern = request.mode;
-  msg.value = request.value;
-  msg.flags = 0;
-  msg.flags2 = 0;
-  
-  arnl.monitor->setWheelLightDefaultMode(false);
-  arnl.robot->comDataN(ArCommands::WHEEL_LIGHT, (const char*)&msg, 4);
-  
-  return true;
-}
-
 bool RosArnlNode::global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Localize init (global_localization service) request...");
 //  arnl.locTask->localizeRobotInMapInit();
-  if(!arnl.locTask->localizeRobotAtHomeBlocking()) {
+  if(! arnl.locTask->localizeRobotAtHomeBlocking() )
     ROS_WARN_NAMED("rosarnl_node", "rosarnl_node: Error in initial localization.");
-    return false;
-  }
-  
   return true;
 }
 
@@ -698,15 +583,9 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   // preempted, which allows it to work in combination with MobileEyes or other
   // clients as well as the ros action client.
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: begin execution for new goal.");
-  
-  // Transform to odom frame
-  geometry_msgs::PoseStamped transformed_goal;
-  listener.transformPose(frame_id_map, goal->target_pose, transformed_goal);
-  
   action_executing  = true;
-  ArPose goalpose = rosPoseToArPose(transformed_goal);
+  ArPose goalpose = rosPoseToArPose(goal->target_pose);
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: planning to goal %.0fmm, %.0fmm, %.0fdeg", goalpose.getX(), goalpose.getY(), goalpose.getTh());
-  
   bool heading = !ArMath::isNan(goalpose.getTh());
   //arnl.pathTask->pathPlanToPose(goalpose, heading);
   arnl.modeGoto->gotoPose(goalpose, heading);
@@ -729,11 +608,7 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
       {
         // we were preempted by a new goal
         move_base_msgs::MoveBaseGoalConstPtr newgoal = actionServer.acceptNewGoal();
-	
-	// Transform to odom frame
-	listener.transformPose(frame_id_map, newgoal->target_pose, transformed_goal);
-	
-        goalpose = rosPoseToArPose(transformed_goal);
+        goalpose = rosPoseToArPose(newgoal->target_pose);
         ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: new goal interrupted current goal.  planning to new goal %.0fmm, %.0fmm, %.0fdeg", goalpose.getX(), goalpose.getY(), goalpose.getTh());
         bool heading = !ArMath::isNan(goalpose.getTh());
         arnl.modeGoto->gotoPose(goalpose, heading);
@@ -797,43 +672,28 @@ void RosArnlNode::arnl_goal_interrupted_cb(ArPose p)
 
 void RosArnlNode::cmdvel_cb( const geometry_msgs::TwistConstPtr &msg)
 {
-  ros::Time veltime = ros::Time::now();
-  ROS_INFO( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime.toSec() );
-  
+  veltime = ros::Time::now();//declare
+  //ROS_INFO( "new speed: [%0.2f,%0.2f](%0.3f)", msg->linear.x*1e3, msg->angular.z, veltime.toSec() );
+  double transRatio = msg->linear.x*1e3;
+  double rotRatio = msg->angular.z*180/M_PI*1e3;
+  double throttleRatio = 20;
+  double lateralRatio = msg->linear.y*1e3;
   arnl.robot->lock();
-  arnl.robot->setVel(msg->linear.x*1e3);
-  if(arnl.robot->hasLatVel())
-    arnl.robot->setLatVel(msg->linear.y*1e3);
-  arnl.robot->setRotVel(msg->angular.z*180/M_PI);
+  arnl.modeRatioDrive->ratioDrive(transRatio, rotRatio, throttleRatio, true, lateralRatio);
   arnl.robot->unlock();
-  ROS_DEBUG("RosArnl: sent vels to Arnl (time %f): x vel %f mm/s, y vel %f mm/s, ang vel %f deg/s", veltime.toSec(), 
-    (double) msg->linear.x * 1e3, (double) msg->linear.y * 1e3, (double) msg->angular.z * 180/M_PI);
+  //ROS_DEBUG("rosarnl_node: sent vels to to aria (time %f): x vel %f mm/s, y vel %f mm/s, ang vel %f deg/s", veltime.toSec(),
+    //(double) msg->linear.x * 1e3, (double) msg->linear.y * 1.3, (double) msg->angular.z * 180/M_PI);
 }
-
 
 void RosArnlNode::shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg)
 {
   std_msgs::Empty confirm_msg;
-  shutdown_requested = true;
+  rosarnl_inventory_running = false;
   arnl_shutdown_confirm_pub.publish(confirm_msg);
 }
 
-bool RosArnlNode::check_estop(const char *s) {
-  arnl.robot->lock();
-  bool e = arnl.robot->isEStopPressed();
-  arnl.robot->unlock();
-  
-  if(e) {
-    ROS_ERROR_NAMED("rosarnl_node", "rosarnl_node: Warning: Robot e-stop button pressed, cannot %s", s);
-  }
-  
-  return e;
-}
 
-void RosArnlNode::speech_cb(const std_msgs::StringConstPtr &msg)
-{
-  cepstral.speak(msg->data.c_str());
-}
+
 
 
 void ariaLogHandler(const char *msg, ArLog::LogLevel level)
@@ -891,7 +751,7 @@ int main( int argc, char** argv )
 
   ros::NodeHandle n(std::string("~"));
   RosArnlNode *node = new RosArnlNode(n, arnl);
-  if(!node->Setup())
+  if( node->Setup() != 0 )
   {
     ROS_FATAL_NAMED("rosarnl_node", "rosarnl_node: ROS node setup failed... \n" );
     return -1;
