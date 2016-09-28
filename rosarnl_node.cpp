@@ -78,7 +78,7 @@ class RosArnlNode
 
     ros::Time veltime;
 
-    geometry_msgs::PoseStamped pose_msg;
+    geometry_msgs::PoseWithCovarianceStamped pose_msg;
     ros::Publisher pose_pub;
 
     std_msgs::Float64 params_msg;
@@ -188,7 +188,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
 
   
   // initialize to all invalid if pose is with covariance
-  // pose_msg.pose.covariance.assign(-1);
+  pose_msg.pose.covariance.assign(-1);
 
   motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true /*latch*/ );
   motors_state.data = false;
@@ -198,7 +198,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   dock_state.data = "";
   published_dock_state = false;
 
-  pose_pub = n.advertise<geometry_msgs::PoseStamped>("amcl_pose", 5, true /*latch*/);
+  pose_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 5, true /*latch*/);
 
   params_pub = n.advertise<std_msgs::Float64>("params",1, true /*latch*/);
 
@@ -286,7 +286,7 @@ void RosArnlNode::publish()
 
   // convert mm and degrees to position meters and quaternion angle in ros pose
   tf::poseTFToMsg(tf::Transform(tf::createQuaternionFromYaw(pos.getTh()*M_PI/180), tf::Vector3(pos.getX()/1000,
-    pos.getY()/1000, 0)), pose_msg.pose); 
+    pos.getY()/1000, 0)), pose_msg.pose.pose); 
 
   pose_msg.header.frame_id = "map";
 
@@ -370,7 +370,7 @@ void RosArnlNode::publish()
   if(action_executing) 
   {
     move_base_msgs::MoveBaseFeedback feedback;
-    feedback.base_position.pose = pose_msg.pose;
+    feedback.base_position.pose = pose_msg.pose.pose;
     actionServer.publishFeedback(feedback);
   }
 
