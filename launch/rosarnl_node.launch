@@ -10,9 +10,8 @@
     output = "screen"
   />
 
-
-<!-- <param name="robot_length" type="double" value="696.0" /> -->
-
 <rosparam command="load" file="$(find rosarnl)/rosparam/robot_params.yaml" />
-t
+
 </launch>
+
+
