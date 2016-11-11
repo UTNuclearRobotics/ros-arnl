@@ -51,7 +51,9 @@ LaserPublisher::LaserPublisher(ArLaser *_l, ros::NodeHandle& _n, bool _broadcast
   laserscan.angle_max = ArMath::degToRad(laser->getEndDegrees());
   laserscan.range_min = 0;
   laserscan.range_max = laser->getMaxRange() / 1000.0;
-  pointcloud.header.frame_id = globaltfname;
+  pointcloud.header.frame_id = "odom";
+
+  ROS_INFO("Global: %s Parent: %s", globaltfname.c_str(), parenttfname.c_str());
   
   // Get angle_increment of the laser
   laserscan.angle_increment = 0;
