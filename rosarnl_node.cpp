@@ -328,9 +328,11 @@ bool RosArnlNode::Setup()
 void RosArnlNode::spin()
 {
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Running ROS node...");
+  ros::Rate loopRate(10.0);
   while (!shutdown_requested)
   {
     ros::spinOnce();
+    loopRate.sleep();
   }
   ROS_INFO("Shutdown request for rosarnl_node");
 }
@@ -700,6 +702,7 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   arnl.modeGoto->gotoPose(goalpose, heading);
   arnl_goal_done = false;
   
+  ros::Rate loopRate(20.0);
   while(n.ok() && actionServer.isActive())
   {
     // TODO check for localization lost
@@ -718,8 +721,8 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
         // we were preempted by a new goal
         move_base_msgs::MoveBaseGoalConstPtr newgoal = actionServer.acceptNewGoal();
   
-  // Transform to odom frame
-  listener.transformPose(frame_id_map, newgoal->target_pose, transformed_goal);
+        // Transform to odom frame
+        listener.transformPose(frame_id_map, newgoal->target_pose, transformed_goal);
   
         goalpose = rosPoseToArPose(transformed_goal);
         ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: new goal interrupted current goal.  planning to new goal %.0fmm, %.0fmm, %.0fdeg", goalpose.getX(), goalpose.getY(), goalpose.getTh());
@@ -743,7 +746,7 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
     }
 
     // feedback is published in the publish() task callback 
-
+    loopRate.sleep();
   }
   // node is shutting down, n.ok() returned false
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: action: node shutting down, setting aborted state and ending execution.");
