@@ -1,7 +1,7 @@
 
 #include <assert.h>
 
-#include "ArnlSystem.h"
+#include "rosarnl/ArnlSystem.h"
 
 #include "Aria/Aria.h"
 #include "ArNetworking/ArNetworking.h"
