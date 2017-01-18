@@ -1,8 +1,8 @@
 
 #include "Aria.h"
-#include "LaserPublisher.h"
+#include "rosarnl/LaserPublisher.h"
 
-#include "ArTimeToROSTime.h"
+#include "rosarnl/ArTimeToROSTime.h"
 
 #include <math.h>
 

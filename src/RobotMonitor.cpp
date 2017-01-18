@@ -1,5 +1,5 @@
 
-#include "RobotMonitor.h"
+#include "rosarnl/RobotMonitor.h"
 
 RobotMonitor::RobotMonitor(ArRobot *r, ArServerHandlerPopup *ps) :
   robot(r),

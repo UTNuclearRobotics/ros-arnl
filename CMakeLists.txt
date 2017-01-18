@@ -43,12 +43,12 @@ generate_messages(
 )
 
 catkin_package(
-  INCLUDE_DIRS
+  INCLUDE_DIRS include
   CATKIN_DEPENDS message_generation roscpp nav_msgs geometry_msgs tf actionlib actionlib_msgs
 )
 
 find_package(Boost REQUIRED COMPONENTS thread)
-include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} )
+include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} )
 
 IF(DEFINED ENV{ARNL})
   message(WARNING "Warning: Using ARNL environment variable as location of ARNL include and lib directories: $ENV{ARNL}")
@@ -70,7 +70,7 @@ ENDIF()
 include_directories(/usr/local/Aria/ArSpeechSynth_Cepstral/include)
 link_directories(/usr/local/Aria/lib)
 
-add_executable(rosarnl_node rosarnl_node.cpp ArnlSystem.cpp RobotMonitor.cpp LaserPublisher.cpp)
+add_executable(rosarnl_node src/rosarnl_node.cpp src/ArnlSystem.cpp src/RobotMonitor.cpp src/LaserPublisher.cpp)
 add_dependencies(rosarnl_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp})
 #add_dependencies(rosarnl_node rosarnl_gencpp)
 
