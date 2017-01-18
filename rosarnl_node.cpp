@@ -7,9 +7,6 @@
 #include "ArDocking.h"
 
 #include "ArnlSystem.h"
-#include "ArCepstral.h"
-#include "ArSoundsQueue.h"
-#include "ArSpeech.h"
 
 #include "LaserPublisher.h"
 #include <rosarnl/BatteryStatus.h>
@@ -63,8 +60,7 @@ public:
 protected:
   ros::NodeHandle n;
   ArnlSystem &arnl;
-  ArCepstral cepstral;
-
+  
   ArFunctorC<RosArnlNode> myPublishCB;
 
   /**
@@ -207,9 +203,6 @@ protected:
   ros::Subscriber shutdown_sub;
   void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
   
-  // Speech synthesizer
-  ros::Subscriber speech_sub_;
-  void speech_cb(const std_msgs::StringConstPtr &msg);
 
   ros::Publisher current_goal_pub;
   void arnl_new_goal_cb(ArPose p);
@@ -318,14 +311,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   arnl.robot->lock();
   arnl.robot->addSensorInterpTask("ROSPublishingTask", 100, &myPublishCB);
   arnl.robot->unlock();
-  
-  // Speech synthesis
-  if(cepstral.init()) {
-    speech_sub_ = n.subscribe("speak", 5, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::speech_cb, this, _1));
-  }
-  else {
-    ROS_ERROR("Error initializing speech synthesizer.");
-  }
+
 }
 
 RosArnlNode::~RosArnlNode()
@@ -835,10 +821,7 @@ bool RosArnlNode::check_estop(const char *s) {
   return e;
 }
 
-void RosArnlNode::speech_cb(const std_msgs::StringConstPtr &msg)
-{
-  cepstral.speak(msg->data.c_str());
-}
+
 
 
 void ariaLogHandler(const char *msg, ArLog::LogLevel level)
