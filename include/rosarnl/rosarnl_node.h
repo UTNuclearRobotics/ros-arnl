@@ -21,7 +21,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
-#include <tf/transform_listener.h>  
+#include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <std_msgs/Bool.h>
@@ -33,6 +33,14 @@
 #include <std_srvs/Empty.h>
 #include <actionlib/server/simple_action_server.h>
 #include <move_base_msgs/MoveBaseAction.h>
+
+// Speech synthesis. Requires optional build parameter ROSARNL_SPEECH
+#ifdef ROSARNL_SPEECH
+  #include "ArnlSystem.h"
+  #include "ArCepstral.h"
+  #include "ArSoundsQueue.h"
+  #include "ArSpeech.h"
+#endif
 
 class RosArnlNode
 {
@@ -220,4 +228,11 @@ protected:
   
   // If robot has e--top button pressed, print a warning and return true. Otherwise return false.
   bool check_estop(const char *s);
+  
+  // Optional speech synthesis
+  #ifdef ROSARNL_SPEECH
+    ArCepstral cepstral;
+    ros::Subscriber speech_sub_;
+    void speech_cb(const std_msgs::StringConstPtr &msg);
+  #endif
 };
