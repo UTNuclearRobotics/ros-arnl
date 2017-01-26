@@ -41,6 +41,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   enable_srv = n.advertiseService("enable_motors", &RosArnlNode::enable_motors_cb, this);
   disable_srv = n.advertiseService("disable_motors", &RosArnlNode::disable_motors_cb, this);
   wander_srv = n.advertiseService("wander", &RosArnlNode::wander_cb, this);
+  wander_no_map_srv = n.advertiseService("wander_no_map", &RosArnlNode::wander_no_map_cb, this);
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
   undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
@@ -317,6 +318,41 @@ bool RosArnlNode::wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::
     arnl.modeWander->activate();
     return true;
 }
+
+bool RosArnlNode::wander_no_map_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Enable wander mode request.");
+    ArActionStallRecover recover;
+    ArActionBumpers bumpers;
+    ArActionAvoidFront avoidFrontNear("Avoid Front Near", 225, 0);
+    ArActionAvoidFront avoidFrontFar;
+    ArActionConstantVelocity constantVelocity("Constant Velocity", 400);
+    arnl.robot->addAction(&recover, 100);
+    arnl.robot->addAction(&bumpers, 75);
+    arnl.robot->addAction(&avoidFrontNear, 50);
+    arnl.robot->addAction(&avoidFrontFar, 49);
+    arnl.robot->addAction(&constantVelocity, 25);
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Actions enabled.");
+
+    ros::Time wait_start_time = ros::Time::now();
+    ros::Duration timeout_duration(30.0);
+    while  (ros::Time::now() - wait_start_time < timeout_duration) {
+
+    ROS_INFO_THROTTLE_NAMED(1,"rosarnl_node", "rosarnl_node: Waiting");
+      if(check_estop("wandering"))
+        return false;
+    }
+    arnl.robot->remAction(&recover);
+    arnl.robot->remAction(&bumpers);
+    arnl.robot->remAction(&avoidFrontNear);
+    arnl.robot->remAction(&avoidFrontFar);
+    arnl.robot->remAction(&constantVelocity);
+
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Actions disabled.");
+    return true;
+}
+
 
 bool RosArnlNode::stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
@@ -628,6 +664,18 @@ void ariaLogHandler(const char *msg, ArLog::LogLevel level)
 int main( int argc, char** argv )
 {
   ros::init(argc,argv, "rosarnl_node");
+
+
+  if (argc < 2) {
+    ROS_WARN("%s: No map argument. Using default map", ros::this_node::getName().c_str());
+  }
+  else if (argc > 2) {
+    ROS_FATAL("%s: Too many arguments. Shutting down now.", ros::this_node::getName().c_str());
+    return 1; // failure
+  }
+  else {
+      std::cout << "Map: " << argv[1] << std::endl;
+  }
 
   Aria::init();
   Arnl::init();

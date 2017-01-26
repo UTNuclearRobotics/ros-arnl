@@ -4,7 +4,7 @@
     name = "rosarnl_node"
     pkg	 = "rosarnl" 
     type = "rosarnl_node"
-    args = ""
+    args = "/usr/local/Arnl/examples/VaultMap.map"
   
     
     output = "screen"

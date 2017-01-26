@@ -3,6 +3,7 @@
 
 #include "ariaUtil.h"
 #include "RobotMonitor.h"
+#include <iostream>
 
 class ArRobot;
 class ArPathPlanningTask;
