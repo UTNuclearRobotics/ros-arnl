@@ -90,6 +90,15 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   arnl.robot->addSensorInterpTask("ROSPublishingTask", 100, &myPublishCB);
   arnl.robot->unlock();
 
+  // Speech synthesis
+  #ifdef ROSARNL_SPEECH
+    if(cepstral.init()) {
+      speech_sub_ = n.subscribe("speak", 5, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::speech_cb, this, _1));
+    }
+    else {
+      ROS_ERROR("Error initializing speech synthesizer.");
+    }
+  #endif
 }
 
 RosArnlNode::~RosArnlNode()
@@ -624,7 +633,12 @@ void ariaLogHandler(const char *msg, ArLog::LogLevel level)
 }
 
 
-
+#ifdef ROSARNL_SPEECH
+void RosArnlNode::speech_cb(const std_msgs::StringConstPtr &msg)
+{
+  cepstral.speak(msg->data.c_str());
+}
+#endif
 
 
 
