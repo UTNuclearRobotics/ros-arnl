@@ -114,13 +114,7 @@ protected:
    */
   bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-  /**
-   * @breif Activate wander mode without needing arnl map to be populated.
-   *  ROS service callback function.
-   * @srv std_srvs::Empty
-   * @return True on success, false if e-stop is active.
-   */
-  bool wander_no_map_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
   
   /**
    * @breif Stop the platform. ROS service callback function.

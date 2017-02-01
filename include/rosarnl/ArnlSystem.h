@@ -53,6 +53,7 @@ class ArnlSystem
     const char* getServerMode() const ;
     const char* getServerStatus() const ;
     const char* getPathStateName() const ;
+    bool setMap(std::string mapFile);
     
   protected:
     const char *logprefix;

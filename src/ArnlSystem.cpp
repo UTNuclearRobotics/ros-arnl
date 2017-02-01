@@ -300,7 +300,6 @@ ArnlSystem::Error ArnlSystem::setup()
 	  "%4d");
 
 
-  std::cout << "Map1: " << map->getFileName() << std::endl;
   ArSystemStatus::startPeriodicUpdate(1000); // update every 1 second
   Aria::getInfoGroup()->addStringDouble("CPU Use", 10, ArSystemStatus::getCPUPercentFunctor(), "% 4.0f%%");
   Aria::getInfoGroup()->addStringInt("Wireless Link Quality", 9, ArSystemStatus::getWirelessLinkQualityFunctor(), "%d");
@@ -355,7 +354,6 @@ ArnlSystem::Error ArnlSystem::setup()
   handlerMapping->addMappingEndCallback(forbidden->getEnableCB());
 
 
-  std::cout << "Map2: " << map->getFileName() << std::endl;
   // create a pose storage class, this will let the program keep track
   // of where the robot is between runs...  after we try and restore
   // from this file it will start saving the robot's pose into the
@@ -385,13 +383,11 @@ ArnlSystem::Error ArnlSystem::setup()
 #endif
 
   
-  std::cout << "Map3: " << map->getFileName() << std::endl;
   // When parsing the configuration file, also look at the program's command line options 
   // from the command-line argument parser as well as the configuration file.
   // (So you can use any argument on the command line, namely -map.) 
   Aria::getConfig()->useArgumentParser(argparser);
 
-  std::cout << "Map4: " << map->getFileName() << std::endl;
   // Read in parameter files.
   ArLog::log(ArLog::Normal,  "%sLoading config file %s%s into ArConfig...", logprefix,  Aria::getDirectory(), Arnl::getTypicalParamFileName());
   if (!Aria::getConfig()->parseFile(Arnl::getTypicalParamFileName()))
@@ -400,12 +396,11 @@ ArnlSystem::Error ArnlSystem::setup()
     return ConfigError;
   }
 
-  std::cout << "Map5: " << map->getFileName() << std::endl;
   if (!simpleOpener->checkAndLog() || !argparser->checkHelpAndWarnUnparsed())
   {
     return ParseArgumentsError;
   }
-  std::cout << "Map6: " << map->getFileName() << std::endl;
+
   // Warn if there is no map
   if (map->getFileName() == NULL || strlen(map->getFileName()) <= 0)
   {
@@ -458,7 +453,18 @@ ArnlSystem::Error ArnlSystem::setup()
   return OK;
 }
 
-
+bool ArnlSystem::setMap(std::string mapFile) {
+  if (mapFile.empty())
+    return false;
+  std::cout << "Attempting to change from map: " << map->getFileName() << std::endl;
+  if (!Aria::getConfig()->findSection("Files")->findParam("Map")->setString("test.map"))
+    return false;
+  else if (!Aria::getConfig()->callProcessFileCallBacks(true, NULL, 0))
+    return false;
+  else
+    std::cout << "Changed to map: " << map->getFileName() << std::endl;
+  return true;
+}
 
 /// Log messages from robot controller
 bool ArnlSystem::handleDebugMessage(ArRobotPacket *pkt)
