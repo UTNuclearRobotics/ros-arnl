@@ -457,7 +457,7 @@ bool ArnlSystem::setMap(std::string mapFile) {
   if (mapFile.empty())
     return false;
   std::cout << "Attempting to change from map: " << map->getFileName() << std::endl;
-  if (!Aria::getConfig()->findSection("Files")->findParam("Map")->setString("test.map"))
+  if (!Aria::getConfig()->findSection("Files")->findParam("Map")->setString(mapFile.c_str()))
     return false;
   else if (!Aria::getConfig()->callProcessFileCallBacks(true, NULL, 0))
     return false;

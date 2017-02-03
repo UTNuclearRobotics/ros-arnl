@@ -121,8 +121,6 @@ protected:
    * @return True on success, false if e-stop is active.
    */
   bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-
-  
   
   /**
    * @breif Stop the platform. ROS service callback function.
@@ -213,7 +211,11 @@ protected:
   // request rosarnl to shutdown
   ros::Subscriber shutdown_sub;
   void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
-  
+
+  // request for a new map
+  ros::Subscriber change_map_sub;
+  void change_map_cb(const std_msgs::StringConstPtr &msg);
+
 
   ros::Publisher current_goal_pub;
   void arnl_new_goal_cb(ArPose p);

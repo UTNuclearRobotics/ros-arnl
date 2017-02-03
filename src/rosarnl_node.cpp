@@ -73,6 +73,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   cmd_drive_sub = n.subscribe("cmd_vel", 1, (boost::function <void(const geometry_msgs::TwistConstPtr&)>) boost::bind(&RosArnlNode::cmdvel_cb, this, _1));
   goalname_sub = n.subscribe("goalname", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::goalname_sub_cb, this, _1));
   shutdown_sub = n.subscribe("/shutdown", 1, (boost::function <void(const std_msgs::EmptyConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
+  change_map_sub = n.subscribe("change_map", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::change_map_cb, this, _1));
   
   
 
@@ -328,6 +329,13 @@ bool RosArnlNode::wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::
 }
 
 
+void RosArnlNode::change_map_cb(const std_msgs::StringConstPtr &msg)
+{
+    std::string map_name = msg->data;
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Changing map to %s", map_name.c_str());
+    if (arnl.setMap(map_name) )
+      ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Map successfully set");
+}
 
 
 bool RosArnlNode::stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
