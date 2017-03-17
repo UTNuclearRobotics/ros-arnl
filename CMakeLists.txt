@@ -5,7 +5,7 @@ project(rosarnl)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
-set(ROSARL_SPEECH OFF)
+set(ROSARNL_SPEECH OFF)
 
 
 # Load catkin and all dependencies required for this package
@@ -69,12 +69,13 @@ ELSE()
 ENDIF()
 
 add_executable(rosarnl_node src/rosarnl_node.cpp src/ArnlSystem.cpp src/RobotMonitor.cpp src/LaserPublisher.cpp)
-add_dependencies(rosarnl_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp})
+add_dependencies(rosarnl_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencpp)
 
 if(ROSARNL_SPEECH)
   include_directories(/usr/local/Aria/ArSpeechSynth_Cepstral/include)
   link_directories(/usr/local/Aria/lib)
   target_link_libraries(rosarnl_node ArSpeechSynth_Cepstral swift)
+  target_compile_definitions(rosarnl_node PRIVATE -DROSARNL_SPEECH)
 endif()
 
 target_link_libraries(rosarnl_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} Arnl BaseArnl ArNetworkingForArnl AriaForArnl pthread dl rt)
