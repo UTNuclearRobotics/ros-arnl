@@ -11,6 +11,7 @@
 #include "LaserPublisher.h"
 #include <rosarnl/BatteryStatus.h>
 #include <rosarnl/WheelLight.h>
+#include <rosarnl/Stop.h>
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
@@ -127,7 +128,7 @@ protected:
    * @srv std_srvs::Empty
    * @return Always true.
    */
-  bool stop_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  bool stop_cb(rosarnl::Stop::Request& request, rosarnl::Stop::Response& response);
   
   /**
    * @breif Go to dock. ROS service callback function.
