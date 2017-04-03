@@ -4,7 +4,7 @@
     name = "rosarnl_node"
     pkg	 = "rosarnl" 
     type = "rosarnl_node"
-    args = "/usr/local/Arnl/examples/HighbayHall.map"
+    args = "/usr/local/Arnl/examples/convert_output.map"
   
     
     output = "screen"
