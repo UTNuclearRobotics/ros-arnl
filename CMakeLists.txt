@@ -36,6 +36,7 @@ add_service_files(
   FILES
   WheelLight.srv
   Stop.srv
+  ChangeMap.srv
 )
 
 ## Generate added messages and services with any dependencies listed here

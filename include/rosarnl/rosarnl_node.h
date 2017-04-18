@@ -11,6 +11,7 @@
 #include "LaserPublisher.h"
 #include <rosarnl/BatteryStatus.h>
 #include <rosarnl/WheelLight.h>
+#include <rosarnl/ChangeMap.h>
 #include <rosarnl/Stop.h>
 
 #include <ros/ros.h>
@@ -96,6 +97,7 @@ protected:
   ros::ServiceServer disable_srv;
   ros::ServiceServer wander_srv;
   ros::ServiceServer wander_no_map_srv;
+  ros::ServiceServer change_map_srv; // request for a new map
   ros::ServiceServer stop_srv;
   ros::ServiceServer dock_srv;
   ros::ServiceServer undock_srv;
@@ -123,6 +125,13 @@ protected:
    */
   bool wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
   
+  /**
+   * @breif Change the map. ROS service callback function.
+   * @srv ChangeMap::Request request string with filename
+   * @return Always true.
+   */
+  bool change_map_cb(rosarnl::ChangeMap::Request& request, rosarnl::ChangeMap::Response& response);
+
   /**
    * @breif Stop the platform. ROS service callback function.
    * @srv std_srvs::Empty
@@ -213,9 +222,7 @@ protected:
   ros::Subscriber shutdown_sub;
   void shutdown_rosarnl_cb(const std_msgs::EmptyConstPtr &msg);
 
-  // request for a new map
-  ros::Subscriber change_map_sub;
-  void change_map_cb(const std_msgs::StringConstPtr &msg);
+  
 
 
   ros::Publisher current_goal_pub;

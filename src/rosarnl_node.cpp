@@ -41,6 +41,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   enable_srv = n.advertiseService("enable_motors", &RosArnlNode::enable_motors_cb, this);
   disable_srv = n.advertiseService("disable_motors", &RosArnlNode::disable_motors_cb, this);
   wander_srv = n.advertiseService("wander", &RosArnlNode::wander_cb, this);
+  change_map_srv = n.advertiseService("change_map", &RosArnlNode::change_map_cb, this);
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
   undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
@@ -73,7 +74,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   cmd_drive_sub = n.subscribe("cmd_vel", 1, (boost::function <void(const geometry_msgs::TwistConstPtr&)>) boost::bind(&RosArnlNode::cmdvel_cb, this, _1));
   goalname_sub = n.subscribe("goalname", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::goalname_sub_cb, this, _1));
   shutdown_sub = n.subscribe("/shutdown", 1, (boost::function <void(const std_msgs::EmptyConstPtr&)>) boost::bind(&RosArnlNode::shutdown_rosarnl_cb, this, _1));
-  change_map_sub = n.subscribe("change_map", 1, (boost::function <void(const std_msgs::StringConstPtr&)>) boost::bind(&RosArnlNode::change_map_cb, this, _1));
+  
   
   
 
@@ -329,12 +330,17 @@ bool RosArnlNode::wander_cb(std_srvs::Empty::Request& request, std_srvs::Empty::
 }
 
 
-void RosArnlNode::change_map_cb(const std_msgs::StringConstPtr &msg)
+bool RosArnlNode::change_map_cb(rosarnl::ChangeMap::Request& request, rosarnl::ChangeMap::Response& response)
 {
-    std::string map_name = msg->data;
+    std::string map_name = request.filename.data;
     ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Changing map to %s", map_name.c_str());
-    if (arnl.setMap(map_name) )
+    if (arnl.setMap(map_name)) {
       ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Map successfully set");
+      return true;
+    } else {
+      ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Map change was unsuccessful");
+      return false;
+    }
 }
 
 
