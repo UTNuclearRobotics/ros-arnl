@@ -496,7 +496,12 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   
   // Transform to odom frame
   geometry_msgs::PoseStamped transformed_goal;
+  ROS_INFO("1");
+  ROS_INFO_STREAM(goal->target_pose);
+  ROS_INFO_STREAM(frame_id_map);
   listener.transformPose(frame_id_map, goal->target_pose, transformed_goal);
+  ROS_INFO("2");
+
   
   action_executing  = true;
   ArPose goalpose = rosPoseToArPose(transformed_goal);
