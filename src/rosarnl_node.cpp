@@ -152,12 +152,12 @@ void RosArnlNode::publish()
   // ARIA/ARNL times are in reference to an arbitrary starting time, not OS
   // clock, so find the time elapsed between now and last ARNL localization
   // to adjust the time stamp in ROS time vs. now accordingly.
-  //pose_msg.header.stamp = ros::Time::now();
+  pose_msg.header.stamp = ros::Time::now();
   ArTime loctime = arnl.locTask->getLastLocaTime();
   ArTime arianow;
   const double dtsec = (double) loctime.mSecSince(arianow) / 1000.0;
   //printf("localization was %f seconds ago\n", dtsec);
-  pose_msg.header.stamp = ros::Time(ros::Time::now().toSec() - dtsec);
+  // pose_msg.header.stamp = ros::Time(ros::Time::now().toSec() - dtsec);
 
   // TODO if robot is stopped, ARNL won't re-localize (unless TriggerTime option is
   // configured), so should we just use Time::now() in that case? or do users
