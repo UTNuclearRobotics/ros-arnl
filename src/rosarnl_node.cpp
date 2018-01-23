@@ -26,7 +26,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   frame_id_bumper = tf::resolve(tf_prefix, "bumpers_frame");
   frame_id_sonar = tf::resolve(tf_prefix, "sonar_frame");
 
-  pose_msg.pose.covariance.assign(-1);
+  pose_msg.header.frame_id = "odom";
 
   motors_state_pub = n.advertise<std_msgs::Bool>("motors_state", 1, true);
   motors_state.data = false;
@@ -130,7 +130,7 @@ void RosArnlNode::spin()
 
 void RosArnlNode::publish()
 {
-  ros::Time current_time = ros::Time::now();
+  const ros::Time current_time = ros::Time::now();
   
   // todo could only publish if robot not stopped (unless arnl has TriggerTime
   // set in which case it might update localization even ifnot moving), or
@@ -141,60 +141,57 @@ void RosArnlNode::publish()
   ArTime tasktime;
 
   // Note, this is called via SensorInterpTask callback (myPublishCB, named "ROSPublishingTask"). ArRobot object 'robot' sholud not be locked or unlocked.
-  ArPose pos = arnl.robot->getPose();
+  const ArPose pos = arnl.robot->getPose();
 
   // convert mm and degrees to position meters and quaternion angle in ros pose
   tf::poseTFToMsg(tf::Transform(tf::createQuaternionFromYaw(pos.getTh()*M_PI/180), tf::Vector3(pos.getX()/1000,
-    pos.getY()/1000, 0)), pose_msg.pose.pose); 
-
-  pose_msg.header.frame_id = "odom";
+    pos.getY()/1000, 0)), pose_msg.pose.pose);
 
   // ARIA/ARNL times are in reference to an arbitrary starting time, not OS
   // clock, so find the time elapsed between now and last ARNL localization
   // to adjust the time stamp in ROS time vs. now accordingly.
-  pose_msg.header.stamp = ros::Time::now();
-  ArTime loctime = arnl.locTask->getLastLocaTime();
-  ArTime arianow;
-  const double dtsec = (double) loctime.mSecSince(arianow) / 1000.0;
-  //printf("localization was %f seconds ago\n", dtsec);
-  // pose_msg.header.stamp = ros::Time(ros::Time::now().toSec() - dtsec);
+  pose_msg.header.stamp = current_time;
 
   // TODO if robot is stopped, ARNL won't re-localize (unless TriggerTime option is
-  // configured), so should we just use Time::now() in that case? or do users
+  // configured), so should we just use Time::now() in that case? or do usoseers
   // expect long ages for poses if robot stopped?
-
-#ifndef ROS_ARNL_NO_COVARIANCE
-  ArMatrix var;
-  ArPose meanp;
-  if(arnl.locTask->findLocalizationMeanVar(meanp, var))
-  {
-    // ROS pose covariance is 6x6 with position and orientation in 3
-    // dimensions each x, y, z, roll, pitch, yaw (but placed all in one 1-d
-    // boost::array container)
-    //
-    // ARNL has x, y, yaw (aka theta):
-    //    0     1     2
-    // 0  x*x   x*y   x*yaw
-    // 1  y*x   y*y   y*yaw
-    // 2  yaw*x yaw*y yaw*yaw
-    //
-    // Also convert mm to m and degrees to radians.
-    //
-    // all elements in pose_msg.pose.covariance were initialized to -1 (invalid
-    // marker) in the RosArnlNode constructor, so just update elements that
-    // contain x, y and yaw.
   
-    // pose_msg.pose.covariance[6*0 + 0] = var(0,0)/1000.0;  // x/x
-    // pose_msg.pose.covariance[6*0 + 1] = var(0,1)/1000.0;  // x/y
-    // pose_msg.pose.covariance[6*0 + 5] = ArMath::degToRad(var(0,2)/1000.0);    //x/yaw
-    // pose_msg.pose.covariance[6*1 + 0] = var(1,0)/1000.0;  //y/x
-    // pose_msg.pose.covariance[6*1 + 1] = var(1,1)/1000.0;  // y/y
-    // pose_msg.pose.covariance[6*1 + 5] = ArMath::degToRad(var(1,2)/1000.0);  // y/yaw
-    // pose_msg.pose.covariance[6*5 + 0] = ArMath::degToRad(var(2,0)/1000.0);  //yaw/x
-    // pose_msg.pose.covariance[6*5 + 1] = ArMath::degToRad(var(2,1)/1000.0);  // yaw*y
-    // pose_msg.pose.covariance[6*5 + 5] = ArMath::degToRad(var(2,2)); // yaw*yaw
+  bool use_covariance;
+  n.param<bool>("use_covariance", use_covariance, false);
+  
+  if (use_covariance) {
+    ArMatrix var;
+    ArPose meanp;
+    if(arnl.locTask->findLocalizationMeanVar(meanp, var))
+    {
+      /*
+      ROS pose covariance is 6x6 with position and orientation in 3
+      dimensions each x, y, z, roll, pitch, yaw (but placed all in one 1-d
+      boost::array container;
+      
+      ARNL has x, y, yaw (aka theta):
+	x*x   x*y   x*yaw
+	y*x   y*y   y*yaw
+	yaw*x yaw*y yaw*yaw
+      
+      Also convert mm to m and degrees to radians.
+      
+      all elements in pose_msg.pose.covariance were initialized to -1 (invalid
+      marker) in the RosArnlNode constructor, so just update elements that
+      contain x, y and yaw.
+      */
+    
+      pose_msg.pose.covariance[/*6*0 + 0*/ 0] = var(0,0)/1000.0;  // x/x
+      pose_msg.pose.covariance[/*6*0 + 1*/ 1] = var(0,1)/1000.0;  // x/y
+      pose_msg.pose.covariance[/*6*0 + 5*/ 5] = ArMath::degToRad(var(0,2)/1000.0);    //x/yaw
+      pose_msg.pose.covariance[/*6*1 + 0*/ 6] = var(1,0)/1000.0;  //y/x
+      pose_msg.pose.covariance[/*6*1 + 1*/ 7] = var(1,1)/1000.0;  // y/y
+      pose_msg.pose.covariance[/*6*1 + 5*/ 11] = ArMath::degToRad(var(1,2)/1000.0);  // y/yaw
+      pose_msg.pose.covariance[/*6*5 + 0*/ 30] = ArMath::degToRad(var(2,0)/1000.0);  //yaw/x
+      pose_msg.pose.covariance[/*6*5 + 1*/ 31] = ArMath::degToRad(var(2,1)/1000.0);  // yaw*y
+      pose_msg.pose.covariance[/*6*5 + 5*/ 35] = ArMath::degToRad(var(2,2)); // yaw*yaw
+    }
   }
-#endif
   
   pose_pub.publish(pose_msg);
 
@@ -218,7 +215,7 @@ void RosArnlNode::publish()
 
 
   // publishing transform map->base_link
-  map_trans.header.stamp = ros::Time::now();
+  map_trans.header.stamp = current_time;
   map_trans.header.frame_id = frame_id_map;
   map_trans.child_frame_id = frame_id_base_link;
   
@@ -234,7 +231,7 @@ void RosArnlNode::publish()
   bool e = arnl.robot->areMotorsEnabled();
   if(e != motors_state.data || !published_motors_state)
   {
-    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing new motors state: %s.", e?"yes":"no");
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: New motor state: %s.", e?"yes":"no");
     motors_state.data = e;
     motors_state_pub.publish(motors_state);
     published_motors_state = true;
@@ -244,7 +241,7 @@ void RosArnlNode::publish()
   std::string state(arnl.modeDock->toString(arnl.modeDock->getState()));
   if(state != dock_state.data)
   {
-    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing new dock state: %s.", e?"yes":"no");
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: New dock state: %s.", e?"yes":"no");
     dock_state.data = state;
     dock_state_pub.publish(dock_state);
     published_dock_state = true;
@@ -253,7 +250,7 @@ void RosArnlNode::publish()
   const char *s = arnl.getServerStatus();
   if(s != NULL && lastServerStatus != s)
   {
-    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing new server status: %s", s);
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: New server status: %s", s);
     lastServerStatus = s;
     std_msgs::String msg;
     msg.data = lastServerStatus;
@@ -263,7 +260,7 @@ void RosArnlNode::publish()
   const char *m = arnl.getServerMode();
   if(m != NULL && lastServerMode != m)
   {
-    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: publishing now server mode: %s", m);
+    ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: New server mode: %s", m);
     lastServerMode = m;
     std_msgs::String msg;
     msg.data = lastServerMode;
