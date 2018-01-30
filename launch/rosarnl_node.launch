@@ -10,7 +10,7 @@
     output = "screen"
   />
 
-<rosparam command="load" file="$(find rosarnl)/rosparam/robot_params.yaml" />
+<rosparam command="load" file="$(find rosarnl)/rosparam/robot_params.yaml" ns="/rosarnl_node"/>
 
 </launch>
 

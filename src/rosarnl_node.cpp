@@ -121,6 +121,7 @@ void RosArnlNode::spin()
   while (!shutdown_requested)
   {
     ros::spinOnce();
+    publish();
     loopRate.sleep();
   }
   ROS_INFO("Shutdown request for rosarnl_node");
@@ -157,8 +158,8 @@ void RosArnlNode::publish()
   // expect long ages for poses if robot stopped?
   
   bool use_covariance;
-  n.param<bool>("use_covariance", use_covariance, false);
-  
+  n.getParam("/rosarnl_node/use_covariance", use_covariance);
+
   if (use_covariance) {
     ArMatrix var;
     ArPose meanp;
@@ -493,11 +494,9 @@ void RosArnlNode::execute_action_cb(const move_base_msgs::MoveBaseGoalConstPtr &
   
   // Transform to odom frame
   geometry_msgs::PoseStamped transformed_goal;
-  ROS_INFO("1");
   ROS_INFO_STREAM(goal->target_pose);
   ROS_INFO_STREAM(frame_id_map);
   listener.transformPose(frame_id_map, goal->target_pose, transformed_goal);
-  ROS_INFO("2");
 
   
   action_executing  = true;
