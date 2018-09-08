@@ -216,7 +216,8 @@ void RosArnlNode::publish()
 
 
   // publishing transform map->base_link
-  map_trans.header.stamp = current_time;
+  map_trans.header.stamp.sec = current_time.toSec();
+  map_trans.header.stamp.nsec = current_time.toNSec();
   map_trans.header.frame_id = frame_id_map;
   map_trans.child_frame_id = frame_id_base_link;
   
