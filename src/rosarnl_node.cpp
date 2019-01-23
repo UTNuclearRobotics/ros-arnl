@@ -37,6 +37,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   published_dock_state = false;
 
   pose_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 5, true);
+  loc_pub = n.advertise<std_msgs::Float64>("localization_score", 10, true);
 
   enable_srv = n.advertiseService("enable_motors", &RosArnlNode::enable_motors_cb, this);
   disable_srv = n.advertiseService("disable_motors", &RosArnlNode::disable_motors_cb, this);
@@ -195,6 +196,11 @@ void RosArnlNode::publish()
   }
   
   pose_pub.publish(pose_msg);
+
+
+  double loc_score = arnl.locTask->getLocalizationScore();
+  loc_msg.data = loc_score;
+  loc_pub.publish(loc_msg);
 
   // Battery info publishing
   // Check for periodic timeout

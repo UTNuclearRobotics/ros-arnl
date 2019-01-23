@@ -175,7 +175,9 @@ protected:
   bool published_dock_state;
 
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
+  std_msgs::Float64 loc_msg;
   ros::Publisher pose_pub;
+  ros::Publisher loc_pub;
 
   // Battery publishing
   ros::Publisher battery_pub;
