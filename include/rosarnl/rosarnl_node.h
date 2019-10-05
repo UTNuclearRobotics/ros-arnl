@@ -21,6 +21,7 @@
 #include <geometry_msgs/PoseWithCovariance.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <nav_msgs/GetPlan.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
@@ -91,7 +92,7 @@ protected:
   /**
    * @breif Convert Aria ArPose type to ROS pose message
    */
-  geometry_msgs::Pose rosPoseToArPose(const ArPose& arpose);
+  geometry_msgs::Pose arPoseToRosPose(const ArPose& arpose);
 
   ros::ServiceServer enable_srv;
   ros::ServiceServer disable_srv;
@@ -103,6 +104,7 @@ protected:
   ros::ServiceServer undock_srv;
   ros::ServiceServer wheel_light_srv;
   ros::ServiceServer global_localization_srv;
+  ros::ServiceServer get_plan_srv;
 
   /**
    * @breif Enable drive motors. ROS service callback function.
@@ -166,6 +168,13 @@ protected:
    * @return True on success, false on failure.
    */
   bool global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  
+  /**
+   * @brief Get a navigation plan to a pose.
+   * @srv nav_msgs::GetPlan
+   * @return Success or failure.
+   */
+  bool get_plan_cb(nav_msgs::GetPlan::Request& request, nav_msgs::GetPlan::Response& response);
 
   ros::Publisher motors_state_pub;
   ros::Publisher dock_state_pub;

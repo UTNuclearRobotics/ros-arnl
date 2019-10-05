@@ -45,6 +45,7 @@ RosArnlNode::RosArnlNode(ros::NodeHandle nh, ArnlSystem& arnlsys)  :
   stop_srv = n.advertiseService("stop", &RosArnlNode::stop_cb, this);
   dock_srv = n.advertiseService("dock", &RosArnlNode::dock_cb, this);
   undock_srv = n.advertiseService("undock", &RosArnlNode::undock_cb, this);
+  get_plan_srv = n.advertiseService("get_plan", &RosArnlNode::get_plan_cb, this);
   
   // Only advertise the wheel light service if the robot is equipped with them
   std::string robot_type;
@@ -401,6 +402,33 @@ bool RosArnlNode::wheel_light_cb(rosarnl::WheelLight::Request& request, rosarnl:
   return true;
 }
 
+
+bool RosArnlNode::get_plan_cb(nav_msgs::GetPlan::Request& request, nav_msgs::GetPlan::Response& response)
+{
+  // Transform to odom frame
+  geometry_msgs::PoseStamped transformed_goal;
+  listener.transformPose(frame_id_map, request.goal, transformed_goal);
+  
+  const ArPose ar_goal = rosPoseToArPose(transformed_goal);
+  
+  const std::list<ArPose> ar_path = arnl.pathTask->getPathFromTo(arnl.robot->getPose(), ar_goal);
+  
+  ROS_INFO_STREAM("ar_path size " << ar_path.size());
+  
+  response.plan.header.frame_id = frame_id_map;
+  response.plan.header.stamp = ros::Time::now();
+  response.plan.poses.reserve(ar_path.size());
+  
+  for (const ArPose &ar_pose : ar_path) {
+    geometry_msgs::PoseStamped ros_pose;
+    ros_pose.pose = arPoseToRosPose(ar_pose);
+    response.plan.poses.push_back(ros_pose);
+  }
+  
+  return !ar_path.empty();
+}
+
+
 bool RosArnlNode::global_localization_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
   ROS_INFO_NAMED("rosarnl_node", "rosarnl_node: Localize init (global_localization service) request...");
@@ -428,7 +456,7 @@ ArPose RosArnlNode::rosPoseToArPose(const geometry_msgs::Pose& p)
   return ArPose( p.position.x * 1000.0, p.position.y * 1000.0, tf::getYaw(p.orientation) / (M_PI/180.0) );
 }
 
-geometry_msgs::Pose arPoseToRosPose(const ArPose& arpose)
+geometry_msgs::Pose RosArnlNode::arPoseToRosPose(const ArPose& arpose)
 {
   // TODO use tf::poseTFToMsg instead?
   geometry_msgs::Pose rospose;
